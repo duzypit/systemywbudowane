@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef enum color_type{
+	Red, Black
+} color_type;
+
 struct node {
 	int key_value;
 	struct node *left;
