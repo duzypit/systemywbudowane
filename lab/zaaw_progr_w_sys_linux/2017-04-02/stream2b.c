@@ -8,6 +8,7 @@
 
 
 int main(void){
+
 	int fd;
 	char * myfifo = "/tmp/myfifo";
 	char buf[MAX_BUF];

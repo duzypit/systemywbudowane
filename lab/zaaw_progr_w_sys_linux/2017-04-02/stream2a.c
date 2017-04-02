@@ -11,10 +11,11 @@ int main(void){
 
 	int fd;
 	char * myfifo = "/tmp/myfifo";
-
+//tmp uniwersalny katalog do plików tymczasowych
 	mkfifo(myfifo, 0666);
 	fd = open(myfifo, O_WRONLY);
 	write(fd, "hi", sizeof("hi"));
+//po zapisie czeka na odczyt i dopiero wykonuje się dalej
 	close(fd);
 	unlink(myfifo);
 
