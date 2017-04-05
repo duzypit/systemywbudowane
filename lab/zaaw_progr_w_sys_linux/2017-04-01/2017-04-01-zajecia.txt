@@ -1,0 +1,19 @@
+uzycie: make
+
+sprawdzenie nagłówków pliku: file <nazwa_pliku>
+sprawdzenie zależności wykonywanego programu: ldd <nazwa_pliku>
+
+wskazanie ścieżki biblioteki przed uruchomieniem programu (wykonywać należy w jednym oknie terminala razem z wykonaniem programu bo inaczej nie będzie działać
+export LD_LIBRARY_PATH=$(pwd):$LD_LIBRARY_PATH
+
+preload biblioteki
+LD_PRELOAD=/lib.....so ./<nazwa_programu>
+
+biblioteki dynamiczne muszą mieć nazwę pliku zaczynającą się od słowa "lib"
+i rozszerzenie "so"
+
+do linkera wówczas podajemy nazwę pliku bez prefixu i rozszerzenia
+$(cc) -L/home/user/zut/programowanie_c/04 -Wall -o main main.o -lsample_lib
+
+zadanie:
+znaleźć wildardy dla plików do makefile
