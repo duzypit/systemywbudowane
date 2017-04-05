@@ -10,7 +10,7 @@
 //kolejki nazwane
 // mknod, mkfifo - można utworzyc kolejki z basha
 int main(void){
-
+	system("clear");
 	int connection_socket, data_socket, result, len;
 	struct sockaddr_un local,
 	/*struct sockaddr*/ remote;
@@ -56,8 +56,8 @@ int main(void){
 		len = sizeof(struct sockaddr);
 
 		//accept - remote będzie wypełniona struct sockaddr_un z klienta, len wiadomka
-		if(data_socket = accept(connection_socket, &remote, &len) == -1){
-			prerro("accept");
+		if((data_socket = accept(connection_socket, &remote, &len)) == -1){
+			perror("accept");
 			exit(EXIT_FAILURE);
 		}
 
