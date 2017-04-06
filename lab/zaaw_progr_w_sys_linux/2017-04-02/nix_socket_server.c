@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#define PEXIT(str) {perror(str);exit(1);}
 #define BUFF_SIZE 1024
 //kolejki nazwane
 // mknod, mkfifo - można utworzyc kolejki z basha
@@ -22,8 +23,7 @@ int main(void){
 	//socket(domain, type, protocol) - jeśli protocol == 0, socket wybierze sam na podstawie parametru type
 	connection_socket = socket(AF_UNIX, SOCK_STREAM,0);
 	if (connection_socket == -1){
-		perror("socket");
-		exit(EXIT_FAILURE);
+		PEXIT("socket");
 	}
 
 
@@ -38,16 +38,14 @@ int main(void){
 	//bind(int socketfd, struct sockaddr * my_addr, int addrlen)
 	result = bind(connection_socket, (const struct sockaddr *) &local, sizeof(struct sockaddr_un));
 	if (result == -1){
-		perror("bind");
-		exit(EXIT_FAILURE);
+		PEXIT("bind");
 	}
 
 	puts("Waiting for connection...");
 	//listen(int sockfd, int backlog) - backlog jak duża może być kolejka oczekujących połączeń
 	result = listen(connection_socket, 20);
 	if(result == -1){
-		perror("listen");
-		exit(EXIT_FAILURE);
+		PEXIT("listen");
 	}
 
 	for(;;){
@@ -57,8 +55,7 @@ int main(void){
 
 		//accept - remote będzie wypełniona struct sockaddr_un z klienta, len wiadomka
 		if((data_socket = accept(connection_socket, &remote, &len)) == -1){
-			perror("accept");
-			exit(EXIT_FAILURE);
+			PEXIT("accept");
 		}
 
 		puts("Connected...");
@@ -67,8 +64,7 @@ int main(void){
 			//read(int socketfd, void *buf, size_t nbytes) - args: deskryptor, char array na content, ilość bajtów do przeczytania
 			result = recv(data_socket, buffer, BUFF_SIZE, 0);
 			if(result == -1){
-				perror("read");
-				exit(EXIT_FAILURE);
+				PEXIT("read");
 			}
 			break;
 		}
@@ -78,6 +74,7 @@ int main(void){
 	printf("%s \n", buffer);
 	close(data_socket);
 	close(connection_socket);
+	unlink(myfifo);
 
 	return 0;
 
