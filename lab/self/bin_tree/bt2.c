@@ -57,32 +57,32 @@ case A,
 Parent of leaf is left child of grand parent of leaf
 
 */
-	struct node *parent = (*leaf)->parent;
-printf("parent %d\n",parent->key_value);
-	struct node *grand_parent = parent->parent;
-printf("grand_parent %d\n",grand_parent->key_value);
-	if(parent == grand_parent->left){
+	//parent alias
+	struct node *p = (*leaf)->parent;
+	//grand parent alias
+	struct node *gp = parent->parent;
+	//uncle alias
+	struct node *u = grand_parent->right;
 
-		struct node *uncle = grand_parent->right;
+	if(p == gp->left){
+
 /*
-	case: 1
-	the uncle of leaf is also red, only recoloring required
+	case: uncle red & left left
 */
 
 		if(uncle->color == Red && uncle != NULL){
-			//case 1 - change color
-			grand_parent-> color = Red;
-			parent->color = Black;
-printf("uncle %d\n",uncle->key_value);
-			uncle->color = Black;
-			//*leaf = grand_parent;	
-
+			p->color = Black;
+			u->color = Black;
 		} else {
 /*
 	case: 2
 	leaf is right child of its parent, left rotation required
 http://quiz.geeksforgeeks.org/c-program-red-black-tree-insertion/
 */
+			if (p == gp->right){
+				
+				rotateLeft(*)
+			}
 		}
 	
 
@@ -174,10 +174,10 @@ puts("================================================");
 	print_tree(root);
 puts("");
 puts("================================================");
-//	insert(3, &root, NULL);
-//	print_tree(root);
-//puts("");
-//puts("================================================");
+	insert(3, &root, NULL);
+	print_tree(root);
+puts("");
+puts("================================================");
 //	insert(14, &root, NULL);
 	//print_tree(root);
 //puts("");
