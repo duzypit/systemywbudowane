@@ -60,9 +60,9 @@ Parent of leaf is left child of grand parent of leaf
 	//parent alias
 	struct node *p = (*leaf)->parent;
 	//grand parent alias
-	struct node *gp = parent->parent;
+	struct node *gp = p->parent;
 	//uncle alias
-	struct node *u = grand_parent->right;
+	struct node *u = gp->right;
 
 	if(p == gp->left){
 
@@ -70,7 +70,7 @@ Parent of leaf is left child of grand parent of leaf
 	case: uncle red & left left
 */
 
-		if(uncle->color == Red && uncle != NULL){
+		if(u->color == Red && u != NULL){
 			p->color = Black;
 			u->color = Black;
 		} else {
@@ -81,7 +81,7 @@ http://quiz.geeksforgeeks.org/c-program-red-black-tree-insertion/
 */
 			if (p == gp->right){
 				
-				rotateLeft(*)
+			//	rotateLeft(*)
 			}
 		}
 	
