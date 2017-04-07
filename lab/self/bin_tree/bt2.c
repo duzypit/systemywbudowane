@@ -49,41 +49,57 @@ void insert(int key, struct node **leaf, struct node *parent){
 			(*leaf)->color = Red;
 		}
 
-while((*leaf)-> parent != NULL && (*leaf)->parent->color == Red && (*leaf)->color != Black){
+		while((*leaf)-> parent != NULL &&
+			  (*leaf)->parent->color == Red &&
+			  (*leaf)->color != Black){
 
 
 /*
-case A, 
-Parent of leaf is left child of grand parent of leaf
-
+ *	Parent of leaf is left child of grand parent
 */
-	//parent alias
-	struct node *p = (*leaf)->parent;
-	//grand parent alias
-	struct node *gp = p->parent;
-	//uncle alias
-	struct node *u = gp->right;
+		//parent alias
+		struct node *p = (*leaf)->parent;
+		//grand parent alias
+		struct node *gp = p->parent;
+		//uncle alias
+		struct node *u = gp->right;
 
-	if(p == gp->left){
+		if(p == gp->left){
 
 /*
-	case: uncle red & left left
+ *	case: uncle red & left left - recolor
 */
 
-		if(u->color == Red && u != NULL){
+		if(p->color == Red && u->color == Red && u != NULL){
 			p->color = Black;
 			u->color = Black;
-		} else {
+			gp->color = Red;
+		} 
 /*
-	case: 2
-	leaf is right child of its parent, left rotation required
+ *	uncle black && left left - right rotate
 http://quiz.geeksforgeeks.org/c-program-red-black-tree-insertion/
 */
-			if (p == gp->right){
-				
-			//	rotateLeft(*)
-			}
+		if(p->color == Red && u->color == Black && u != NULL){
+			//rotate right
+			p->right = p -> parent;
+			p -> parent = gp -> parent;
+			gp -> parent = p;
+			gp -> right = NULL;
+			if (p -> parent == NULL)
+			*leaf = p;
 		}
+
+/*
+			if (p == gp->right){
+			//	rotateLeft
+				gp -> right = NULL;
+				p -> left = gp;
+				p -> parent = gp -> parent;
+				gp -> parent = p;
+				//czy parent jest rootem?
+				if ()
+			}
+	*/	
 	
 
 	}
@@ -99,7 +115,7 @@ http://quiz.geeksforgeeks.org/c-program-red-black-tree-insertion/
 		insert(key, &(*leaf)->right, *leaf);
 	}
 }
-
+/*
 struct node *search(int key, struct node *leaf){
 	if(leaf != NULL){
 		if(key == leaf->key_value){
@@ -113,7 +129,7 @@ struct node *search(int key, struct node *leaf){
 		return NULL;
 	}
 }
-
+*/
 void push (char c){
 	depth[di++] = ' ';
 	depth[di++] = c;
@@ -138,19 +154,12 @@ void print_tree(struct node *tree){
                 print_tree(tree->right);
                 pop();
         }
-
-
-
-
 	if(tree->left){
 		printf("%s └───", depth);
 		push(' ');
 		print_tree(tree->left);
 		pop();
 	}
-
-
-
 }
 
 int main (void){
@@ -159,34 +168,35 @@ int main (void){
 	struct node *root = NULL;
 
 	insert(12, &root, NULL);
-	print_tree(root);
-puts("");
-puts("================================================");
-	insert(4, &root, NULL);
-	print_tree(root);
-puts("");
-puts("================================================");
+	//print_tree(root);
+//puts("");
+//puts("================================================");
+	insert(8, &root, NULL);
+	//print_tree(root);
+//puts("");
+//puts("================================================");
 	insert(15, &root, NULL);
-	print_tree(root);
-puts("");
-puts("================================================");
+	//print_tree(root);
+//puts("");
+//puts("================================================");
 	insert(5, &root, NULL);
-	print_tree(root);
+	//print_tree(root);
 puts("");
 puts("================================================");
 	insert(3, &root, NULL);
 	print_tree(root);
 puts("");
 puts("================================================");
-//	insert(14, &root, NULL);
-	//print_tree(root);
-//puts("");
+
+	insert(14, &root, NULL);
+	print_tree(root);
+puts("");
+puts("================================================");
+	insert(1, &root, NULL);
+	print_tree(root);
+puts("");
 //puts("================================================");
-//	insert(16, &root, NULL);
-//	print_tree(root);
-//puts("");
-//puts("================================================");
-//	insert(-4, &root, NULL);
+	//insert(0, &root, NULL);
 	//print_tree(root);
 //puts("");
 //puts("================================================");
