@@ -7,14 +7,14 @@
 #include <stdlib.h>
 
 #define PEXIT(str) {perror(str);exit(1);}
-#define BUFF_SIZE 1024
-int main(void){
-	system("clear");
+#define BUFF_SIZE 256
+
+char * myfifo = "/tmp/myfifo";
+
+int client_init(){
 	int client_socket;
 	struct sockaddr_un remote;
-	char * myfifo = "/tmp/myfifo";
-	char * msg = "dycha";
-	char buffer[10];
+
 	//0 na końcu oznacza, wybierz protokół na podstawie przedostatniego parametru 
 	if((client_socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
 		PEXIT("socket");
@@ -32,16 +32,41 @@ int main(void){
 
 	puts("Connected.");
 
-	if((send(client_socket, msg, strlen(msg), 0)) == -1){
-		PEXIT("write");
-	}
+	return client_socket;
+	
+}
 
-	strcpy(buffer, "END");
-	if((recv(client_socket, buffer, strlen(buffer), 0)) == -1){
-		PEXIT("read");
-	}
+int main(void){
+	system("clear");
+	int client_socket;
 
-	printf("Result = %s\n", buffer);
-	close(client_socket);
+	//char msg[BUFF_SIZE];
+	char buffer[BUFF_SIZE] = {0};
+
+	client_socket = client_init();
+	
+	while(1){
+		printf("Give me a command (end == break): ");
+		memset(buffer, '\0', BUFF_SIZE);
+		fgets(buffer, sizeof(buffer), stdin);
+		buffer[strcspn(buffer,"\n")] = 0;
+		
+		if(strcmp(buffer, "end") != 0 && strlen(buffer) > 0){
+			if((send(client_socket, buffer, strlen(buffer), 0)) == -1){
+				PEXIT("write");
+			}
+	
+		//strcpy(buffer, "END");
+		//if((recv(client_socket, buffer, strlen(buffer), 0)) == -1){
+		//	PEXIT("read");
+		//}
+	
+		//printf("Result = %s\n", buffer);
+		//break;
+		} else {
+			puts("Bye!");
+			close(client_socket);
+		}
+	}
 	return 0;
 }

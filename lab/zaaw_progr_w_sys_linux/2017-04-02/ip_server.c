@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #define PEXIT(str) {perror(str);exit(1);}
-#define BUFF_SIZE 1024
+#define BUFF_SIZE 256
 char * myfifo = "/tmp/myfifo";	
 
 int server_init(){
@@ -36,7 +36,7 @@ int server_init(){
 	if(result == -1){
 		PEXIT("listen");
 	}
-
+	puts("Up & runnin'");
 	return connection_socket;
 }
 
@@ -45,7 +45,7 @@ int main(void){
 
 	int data_socket, connection_socket, len, result;
 	struct sockaddr remote;
-	char * buffer = calloc(BUFF_SIZE, sizeof(char));
+	char buffer[BUFF_SIZE] = {0};
 
 	connection_socket = server_init();
 
@@ -62,18 +62,23 @@ int main(void){
 
 		puts("Connected...");
 
-		for(;;){
+		while(1){
+			memset(buffer, '\0', BUFF_SIZE);
 			//read(int socketfd, void *buf, size_t nbytes) - args: deskryptor, char array na content, ilość bajtów do przeczytania
 			result = recv(data_socket, buffer, BUFF_SIZE, 0);
 			if(result == -1){
 				PEXIT("read");
+					
 			}
-			break;
+			printf("%s \n", buffer);
+			if(strcmp(buffer, "end") == 0){
+				break;
+			}
 		}
 		break;
 	}
 
-	printf("%s \n", buffer);
+	
 	close(data_socket);
 	close(connection_socket);
 	unlink(myfifo);
