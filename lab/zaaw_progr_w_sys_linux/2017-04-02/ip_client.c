@@ -45,16 +45,16 @@ int main(void){
 
 	client_socket = client_init();
 	
-	while(1){
+	while(strcmp(buffer, "end") != 0){
 		printf("Give me a command (end == break): ");
 		memset(buffer, '\0', BUFF_SIZE);
 		fgets(buffer, sizeof(buffer), stdin);
 		buffer[strcspn(buffer,"\n")] = 0;
 		
-		if(strcmp(buffer, "end") != 0 && strlen(buffer) > 0){
-			if((send(client_socket, buffer, strlen(buffer), 0)) == -1){
-				PEXIT("write");
-			}
+		
+		if((send(client_socket, buffer, strlen(buffer), 0)) == -1){
+			PEXIT("write");
+		}
 	
 		//strcpy(buffer, "END");
 		//if((recv(client_socket, buffer, strlen(buffer), 0)) == -1){
@@ -63,9 +63,10 @@ int main(void){
 	
 		//printf("Result = %s\n", buffer);
 		//break;
-		} else {
+		if(strcmp(buffer, "end") == 0 ) {
 			puts("Bye!");
 			close(client_socket);
+			break;
 		}
 	}
 	return 0;

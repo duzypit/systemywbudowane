@@ -49,7 +49,7 @@ int main(void){
 
 	connection_socket = server_init();
 
-	while(1){
+	while(strcmp(buffer, "end") != 0){
 		
 		//accep zwraca socket, poprzedni cały czas słucha czy nie ma połączeń!
 		len = sizeof(struct sockaddr);
@@ -57,25 +57,29 @@ int main(void){
 		//accept - remote będzie wypełniona struct sockaddr_un z klienta, len wiadomka
 		if((data_socket = accept(connection_socket, &remote, &len)) == -1){
 			PEXIT("accept");
-			break;
 		}
 
 		puts("Connected...");
 
-		while(1){
+		while(strcmp(buffer, "end") != 0){
 			memset(buffer, '\0', BUFF_SIZE);
 			//read(int socketfd, void *buf, size_t nbytes) - args: deskryptor, char array na content, ilość bajtów do przeczytania
 			result = recv(data_socket, buffer, BUFF_SIZE, 0);
 			if(result == -1){
 				PEXIT("read");
-					
 			}
+			
 			printf("%s \n", buffer);
+			sleep(1);			
+			buffer[strcspn(buffer,"\n")] = 0;
 			if(strcmp(buffer, "end") == 0){
-				break;
+				puts("End detected...");
+				//break;
+
 			}
 		}
-		break;
+		
+		//break;
 	}
 
 	
