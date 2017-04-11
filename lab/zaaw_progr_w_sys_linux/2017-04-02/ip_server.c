@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <sys/un.h>
 #include <string.h>
 #include <unistd.h>
@@ -11,32 +12,7 @@
 char * myfifo = "/tmp/myfifo";	
 
 int server_init(){
-	int connection_socket, result;
-	struct sockaddr_un local;
-	
-	//socket(domain, type, protocol) - jeśli protocol == 0, socket wybierze sam na podstawie parametru type
-	connection_socket = socket(AF_UNIX, SOCK_STREAM,0);
-	if (connection_socket == -1){
-		PEXIT("socket");
-	}	
 
-	local.sun_family = AF_UNIX;
-	//kopiuje określoną ilość znaków z łańcucha źródłowego do docelowego strncpy(dest, src, size)
-	strncpy(local.sun_path, myfifo, sizeof(local.sun_path)-1);
-
-	//przypisujemy  socket do socket local
-	//bind(int socketfd, struct sockaddr * my_addr, int addrlen)
-	result = bind(connection_socket, (const struct sockaddr *) &local, sizeof(struct sockaddr_un));
-	if (result == -1){
-		PEXIT("bind");
-	}	
-
-	//listen(int sockfd, int backlog) - backlog jak duża może być kolejka oczekujących połączeń
-	result = listen(connection_socket, 20);
-	if(result == -1){
-		PEXIT("listen");
-	}
-	puts("Up & runnin'");
 	return connection_socket;
 }
 
@@ -49,20 +25,51 @@ s_parse(char *buff_ptr){
 
 int main(void){
 	system("clear");
-
-	int data_socket, connection_socket, len, result;
-	struct sockaddr remote;
+	
+	struct sockaddr_in sa;
+	if(inet_pton(AF_INET, "192.168.0.100", &(sa.sin_addr)) <= 0){
+		PEXIT("inet_pton");
+	}
+	
 	char buffer[BUFF_SIZE] = {0};
 	char *buff_ptr = &buffer;
+	//http://beej.us/guide/bgnet/output/html/multipage/clientserver.html
+/*	
+	struct addrinfo {
+		int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
+		int              ai_family;    // AF_INET, AF_INET6, AF_UNSPEC
+		int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
+		int              ai_protocol;  // use 0 for "any"
+		size_t           ai_addrlen;   // size of ai_addr in bytes
+		struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
+		char            *ai_canonname; // full canonical hostname
+	
+		struct addrinfo *ai_next;      // linked list, next node
+	};
 
-	connection_socket = server_init();
+	// (IPv4 only--see struct sockaddr_in6 for IPv6)
+
+	struct sockaddr_in {
+		short int          sin_family;  // Address family, AF_INET
+		unsigned short int sin_port;    // Port number
+		struct in_addr     sin_addr;    // Internet address
+		unsigned char      sin_zero[8]; // Same size as struct sockaddr
+	};
+
+	//res - ptr to linked list of results
+	int getaddrinfo(const char *node,     // e.g. "www.example.com" or IP hostname to connect to
+					const char *service,  // e.g. "http" or port number
+					const struct addrinfo *hints,
+					struct addrinfo **res);	
+	*/
+
 
 	while(strcmp(*buff_ptr, "end") != 0){
 		
-		//accep zwraca socket, poprzedni cały czas słucha czy nie ma połączeń!
+
 		len = sizeof(struct sockaddr);
 
-		//accept - remote będzie wypełniona struct sockaddr_un z klienta, len wiadomka
+
 		if((data_socket = accept(connection_socket, &remote, &len)) == -1){
 			PEXIT("accept");
 		}
@@ -71,7 +78,7 @@ int main(void){
 
 		while(strcmp(*buff_ptr, "end") != 0){
 			memset(*buff_ptr, '\0', BUFF_SIZE);
-			//read(int socketfd, void *buf, size_t nbytes) - args: deskryptor, char array na content, ilość bajtów do przeczytania
+
 			result = recv(data_socket, *buff_ptr, BUFF_SIZE, 0);
 			if(result == -1){
 				PEXIT("read");
@@ -84,12 +91,9 @@ int main(void){
 			buffer[strcspn(buffer,"\n")] = 0;
 			if(strcmp(buffer, "end") == 0){
 				puts("End detected...");
-				//break;
-
 			}
 		}
 		
-		//break;
 	}
 
 	
