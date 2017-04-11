@@ -40,16 +40,24 @@ int server_init(){
 	return connection_socket;
 }
 
+s_parse(char *buff_ptr){
+	if (strcmp(*buff_ptr, "list") != 0){
+		
+	}
+	
+}
+
 int main(void){
 	system("clear");
 
 	int data_socket, connection_socket, len, result;
 	struct sockaddr remote;
 	char buffer[BUFF_SIZE] = {0};
+	char *buff_ptr = &buffer;
 
 	connection_socket = server_init();
 
-	while(strcmp(buffer, "end") != 0){
+	while(strcmp(*buff_ptr, "end") != 0){
 		
 		//accep zwraca socket, poprzedni cały czas słucha czy nie ma połączeń!
 		len = sizeof(struct sockaddr);
@@ -61,15 +69,17 @@ int main(void){
 
 		puts("Connected...");
 
-		while(strcmp(buffer, "end") != 0){
-			memset(buffer, '\0', BUFF_SIZE);
+		while(strcmp(*buff_ptr, "end") != 0){
+			memset(*buff_ptr, '\0', BUFF_SIZE);
 			//read(int socketfd, void *buf, size_t nbytes) - args: deskryptor, char array na content, ilość bajtów do przeczytania
-			result = recv(data_socket, buffer, BUFF_SIZE, 0);
+			result = recv(data_socket, *buff_ptr, BUFF_SIZE, 0);
 			if(result == -1){
 				PEXIT("read");
 			}
 			
-			printf("%s \n", buffer);
+			s_parse(*buff_ptr);
+			
+			//printf("%s \n", buffer);
 			sleep(1);			
 			buffer[strcspn(buffer,"\n")] = 0;
 			if(strcmp(buffer, "end") == 0){
