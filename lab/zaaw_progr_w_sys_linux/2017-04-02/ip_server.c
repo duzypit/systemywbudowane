@@ -1,149 +1,102 @@
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <sys/socket.h>
-#include <netdb.h>
 #include <sys/un.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <arpa/inet.h>
 
 #define PEXIT(str) {perror(str);exit(1);}
-#define PCONT(str){perror(str);continue;}
 #define BUFF_SIZE 256
-#define PORT "3490"
-#define BACKLOG 10
-
 char * myfifo = "/tmp/myfifo";	
 
-void sigchld_handler(void){
-	//waitpid() might overwrite errno, so we save and restore it:
-	int saved_errno = errno;
-	while(waitpid(-1, NULL, WNOHANG) >0);
-	errno = saved_errno;
+int server_init(){
+	int connection_socket, result;
+	struct sockaddr_un local;
+	
+	//socket(domain, type, protocol) - jeśli protocol == 0, socket wybierze sam na podstawie parametru type
+	connection_socket = socket(AF_UNIX, SOCK_STREAM,0);
+	if (connection_socket == -1){
+		PEXIT("socket");
+	}	
+
+	local.sun_family = AF_UNIX;
+	//kopiuje określoną ilość znaków z łańcucha źródłowego do docelowego strncpy(dest, src, size)
+	strncpy(local.sun_path, myfifo, sizeof(local.sun_path)-1);
+
+	//przypisujemy  socket do socket local
+	//bind(int socketfd, struct sockaddr * my_addr, int addrlen)
+	result = bind(connection_socket, (const struct sockaddr *) &local, sizeof(struct sockaddr_un));
+	if (result == -1){
+		PEXIT("bind");
+	}	
+
+	//listen(int sockfd, int backlog) - backlog jak duża może być kolejka oczekujących połączeń
+	result = listen(connection_socket, 20);
+	if(result == -1){
+		PEXIT("listen");
+	}
+	puts("Up & runnin'");
+	return connection_socket;
 }
 
-//get sockaddr, IPv4 or IPv6
-void * get_in_addr(struct sockaddr *sa){
-	if(sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in *)sa)->sin_addr);
+s_parse(char *buff_ptr){
+	if (strcmp(*buff_ptr, "list") != 0){
+		
 	}
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+	
 }
 
 int main(void){
 	system("clear");
-	int sockfd, new_fd; //listen on sockfd, new connection on new_fd
-	struct addrinfo hints, *servinfo, *p;
-	struct sockaddr_storage their_addr; // connector's address information
-	socklen_t sin_size;
-	struct sigaction sa;
-	int yes = 1;
-	char s[INET6_ADDRSTRLEN];
-	int rv;
 
-	//char buffer[BUFF_SIZE] = {0};
-	//char *buff_ptr = &buffer;
-	
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE; // use my ip
-	
-	if((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0){
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
-	}
-	
-	// loop throught all the results and bind to first we can
-	for(p = servinfo; p != NULL; p = p->ai_next){
-		if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1){
-			PCONT("server: socket");
-		}
+	int data_socket, connection_socket, len, result;
+	struct sockaddr remote;
+	char buffer[BUFF_SIZE] = {0};
+	char *buff_ptr = &buffer;
+
+	connection_socket = server_init();
+
+	while(strcmp(*buff_ptr, "end") != 0){
 		
-		if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1){
-			PEXIT("setscokopt");			
+		//accep zwraca socket, poprzedni cały czas słucha czy nie ma połączeń!
+		len = sizeof(struct sockaddr);
+
+		//accept - remote będzie wypełniona struct sockaddr_un z klienta, len wiadomka
+		if((data_socket = accept(connection_socket, &remote, &len)) == -1){
+			PEXIT("accept");
 		}
-		
-		if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1){
-			close(sockfd);
-			PCONT("server: bind");
-		}
-		break;
-	}
-	
-	freeaddrinfo(servinfo); //all done with this structure
-	
-	if(p == NULL){
-		fprintf(stderr, "server: failed to bind\n");
-		exit(1);
-	}
-	
-	if (listen(sockfd, BACKLOG) == -1) {
-		PEXIT("listen");
-	}
-	
-	sa.sa_handler = sigchld_handler; //reap all dead processes
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGCHLD, &sa, NULL) == -1){
-		PEXIT("sigaction");
-	}
-	
-	printf("server: waitning for connections...\n");
-	while(1){ //main accept loop
-		sin_size = sizeof(their_addr);
-		new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
-		if (new_fd == -1) {
-			PCONT("accept");
-		}
-		
-		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s));
-		printf("server: got connection from %s\n",s);
-		
-		if(!fork()){ //this is the child process
-			close(sockfd); //child doesn't need the listener
-			if(send(new_fd, "hello world!",13, 0) == -1){
-				perror("send");
-				close(new_fd);
-				exit(0);
+
+		puts("Connected...");
+
+		while(strcmp(*buff_ptr, "end") != 0){
+			memset(*buff_ptr, '\0', BUFF_SIZE);
+			//read(int socketfd, void *buf, size_t nbytes) - args: deskryptor, char array na content, ilość bajtów do przeczytania
+			result = recv(data_socket, *buff_ptr, BUFF_SIZE, 0);
+			if(result == -1){
+				PEXIT("read");
 			}
-			close(new_fd); // parent doesn't need this
-			return 0;
+			
+			s_parse(*buff_ptr);
+			
+			//printf("%s \n", buffer);
+			sleep(1);			
+			buffer[strcspn(buffer,"\n")] = 0;
+			if(strcmp(buffer, "end") == 0){
+				puts("End detected...");
+				//break;
+
+			}
 		}
-	} //end while(1)
-	
-	
-	
-	
-/*	
-	struct addrinfo {
-		int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
-		int              ai_family;    // AF_INET, AF_INET6, AF_UNSPEC
-		int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
-		int              ai_protocol;  // use 0 for "any"
-		size_t           ai_addrlen;   // size of ai_addr in bytes
-		struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
-		char            *ai_canonname; // full canonical hostname
-	
-		struct addrinfo *ai_next;      // linked list, next node
-	};
+		
+		//break;
+	}
 
-	// (IPv4 only--see struct sockaddr_in6 for IPv6)
+	
+	close(data_socket);
+	close(connection_socket);
+	unlink(myfifo);
 
-	struct sockaddr_in {
-		short int          sin_family;  // Address family, AF_INET
-		unsigned short int sin_port;    // Port number
-		struct in_addr     sin_addr;    // Internet address
-		unsigned char      sin_zero[8]; // Same size as struct sockaddr
-	};
+	return 0;
 
-	//res - ptr to linked list of results
-	int getaddrinfo(const char *node,     // e.g. "www.example.com" or IP hostname to connect to
-					const char *service,  // e.g. "http" or port number
-					const struct addrinfo *hints,
-					struct addrinfo **res);	
-	*/
 }

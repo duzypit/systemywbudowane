@@ -35,6 +35,8 @@ void * get_in_addr(struct sockaddr *sa){
 
 int main(void){
 	system("clear");
+	//char * buff_ptr = calloc(sizeof(char) * BUFF_SIZE);
+	char buffer[BUFF_SIZE] = {0};
 	int sockfd, new_fd; //listen on sockfd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 /*
@@ -103,7 +105,7 @@ struct sockaddr_storage {
 		break;
 	}
 	
-	freeaddrinfo(servinfo); //all done with this structure
+	freeaddrinfo(servinfo); //all done with this structure - network service & address translation
 	
 	if(p == NULL){
 		fprintf(stderr, "server: failed to bind\n");
@@ -136,32 +138,40 @@ struct sockaddr_storage {
 			close(sockfd); //child doesn't need the listener
 			if(send(new_fd, "hello world!",13, 0) == -1){
 				perror("send");
-				close(new_fd);
+				//close(new_fd);
 				exit(0);
 			}
+			
+			while(strcmp(buffer, "end") != 0){
+					memset(buffer, 0, BUFF_SIZE);
+					if(recv(new_fd, buffer, BUFF_SIZE, 0) == -1){
+						PEXIT("read");
+					}
+					//sleep(1);			
+
+					buffer[strcspn(buffer,"\r\n")] = 0;
+
+					fprintf(stderr, "client: %s\n", buffer);
+					if(send(new_fd, "got it!\n",7, 0) == -1){
+						perror("send");
+						exit(0);
+					}
+					int i;
+					for(i = 0; i < (unsigned int) strlen(buffer); i++){
+						fprintf(stderr, "%d : %c : %d\n", i+1, buffer[i], (int) buffer[i]);
+					}
+					
+					if(strcmp(buffer, "end") == 0){
+						puts("End detected...");
+						close(new_fd);
+					}
+				}			
+			
 			close(new_fd); // parent doesn't need this
 			return 0;
 		}
 	} //end while(1)
 	
+	return 0;	
 	
-	
-	
-/*	
-
-
-	// (IPv4 only--see struct sockaddr_in6 for IPv6)
-	struct sockaddr_in {
-		short int          sin_family;  // Address family, AF_INET
-		unsigned short int sin_port;    // Port number
-		struct in_addr     sin_addr;    // Internet address
-		unsigned char      sin_zero[8]; // Same size as struct sockaddr
-	};
-
-	//res - ptr to linked list of results
-	int getaddrinfo(const char *node,     // e.g. "www.example.com" or IP hostname to connect to
-					const char *service,  // e.g. "http" or port number
-					const struct addrinfo *hints,
-					struct addrinfo **res);	
-	*/
 }
