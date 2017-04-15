@@ -15,7 +15,7 @@
 #define PCONT(str){perror(str);continue;}
 
 #define PORT "3490"
-#define MAXDATASIZE 100 //max number o bytes to get at once
+#define BUFF_SIZE 256 //max number o bytes to get at once
 
 //get sockaddr, IPv4 or IPv6
 void * get_in_addr(struct sockaddr *sa){
@@ -28,9 +28,10 @@ void * get_in_addr(struct sockaddr *sa){
 
 int main(int argc, char *argv[]){
 	system("clear");
-
+	
+	char buffer[BUFF_SIZE] = {0};
 	int sockfd, numbytes;
-	char buf[MAXDATASIZE];
+
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
@@ -71,14 +72,36 @@ int main(int argc, char *argv[]){
 	printf("client: connecting to %s\n", s);
 	freeaddrinfo(servinfo); // all done with this str
 	
-	if((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1){
+	if((numbytes = recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
 		PEXIT("recv");
 	}
-	buf[numbytes] = '\0';
-	printf("client: received '%s'\n", buf);
-	close(sockfd);
 	
+	printf("client: received %s\n", buffer);
+	printf("end command = break\n");
+	while(strcmp(buffer, "end") != 0){
+		printf(">: ");
+		memset(buffer, 0, BUFF_SIZE);
+		fgets(buffer, sizeof(buffer), stdin);
+		buffer[strcspn(buffer,"\r\n")] = 0;
+		
+		
+		if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
+			PEXIT("send");
+		}
+		memset(buffer, 0, BUFF_SIZE);
+
+		if((recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
+			PEXIT("read");
+		}
 	
+		printf("Server: %s\n", buffer);
+		//break;
+		if(strcmp(buffer, "end") == 0 ) {
+			puts("Bye!");
+			break;
+		}
+	}	
 	
+	close(sockfd);	
 	return 0;
 }

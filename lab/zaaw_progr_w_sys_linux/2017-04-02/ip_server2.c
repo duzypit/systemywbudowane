@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <ifaddrs.h>
 
 #define PEXIT(str) {perror(str);exit(1);}
 #define PCONT(str){perror(str);continue;}
@@ -152,13 +153,40 @@ struct sockaddr_storage {
 					buffer[strcspn(buffer,"\r\n")] = 0;
 
 					fprintf(stderr, "client: %s\n", buffer);
-					if(send(new_fd, "got it!\n",7, 0) == -1){
+
+					//int i;
+					//for(i = 0; i < (unsigned int) strlen(buffer); i++){
+					//	fprintf(stderr, "%d : %c : %d\n", i+1, buffer[i], (int) buffer[i]);
+					//}
+
+					if(strcmp(buffer, "list if") == 0){
+						struct ifaddrs *addrs, *tmp;
+						if (getifaddrs(&addrs) == -1) {
+							PEXIT("getiffaddrs");
+						}
+						tmp = addrs;
+						memset(buffer, 0, BUFF_SIZE);
+						while (tmp) 
+						{
+							if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET)
+							{
+								struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
+								strncat(buffer, tmp->ifa_name, 10);
+								strncat(buffer, ": ",2);
+								strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
+								strncat(buffer, "\n",2);
+								//printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
+							}
+							tmp = tmp->ifa_next;
+						}
+						
+						freeifaddrs(addrs);
+						puts(buffer);
+					}
+//if buffer not empty
+					if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
 						perror("send");
 						exit(0);
-					}
-					int i;
-					for(i = 0; i < (unsigned int) strlen(buffer); i++){
-						fprintf(stderr, "%d : %c : %d\n", i+1, buffer[i], (int) buffer[i]);
 					}
 					
 					if(strcmp(buffer, "end") == 0){
