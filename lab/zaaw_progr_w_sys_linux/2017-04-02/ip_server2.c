@@ -159,7 +159,7 @@ struct sockaddr_storage {
 					//	fprintf(stderr, "%d : %c : %d\n", i+1, buffer[i], (int) buffer[i]);
 					//}
 
-					if(strcmp(buffer, "list if") == 0){
+					if(strcmp(buffer, "list") == 0){
 						struct ifaddrs *addrs, *tmp;
 						if (getifaddrs(&addrs) == -1) {
 							PEXIT("getiffaddrs");
@@ -172,8 +172,8 @@ struct sockaddr_storage {
 							{
 								struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
 								strncat(buffer, tmp->ifa_name, 10);
-								strncat(buffer, ": ",2);
-								strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
+								//strncat(buffer, ": ",2);
+								//strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
 								strncat(buffer, "\n",2);
 								//printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
 							}
