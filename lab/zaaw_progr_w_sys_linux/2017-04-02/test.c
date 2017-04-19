@@ -12,6 +12,8 @@
 //http://stackoverflow.com/questions/4936052/what-are-the-network-ioctl-man-pages
 //https://www.google.pl/search?q=network+interface+ioctl&ie=utf-8&oe=utf-8&client=firefox-b-ab&gfe_rd=cr&ei=DmD3WKD6GeWP8QfZ9oL4AQ
 //http://www.linuxquestions.org/questions/linux-networking-3/ioctl-and-changing-network-interface-flags-751709/
+//usr/include/net/if.h
+//http://www.microhowto.info/howto/get_the_ip_address_of_a_network_interface_in_c_using_siocgifaddr.html
 
 int main(int argc, char *argv[]){
     /*
