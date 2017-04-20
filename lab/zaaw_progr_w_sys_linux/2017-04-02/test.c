@@ -2,10 +2,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
+//ifaddr
+#include <sys/types.h>
+#include <sys/socket.h>
+//freeifaddrs
+#include <ifaddrs.h>
+//inet_ntoa
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define BUFSIZE 256
 #define DELIM " -\t\r\n\a"
+#define PEXIT(str) {perror(str);exit(1);}
 //http://stackoverflow.com/questions/15472299/split-string-into-tokens-and-save-them-in-an-array
 //http://man7.org/linux/man-pages/man3/getopt.3.html
 //https://brennan.io/2015/01/16/write-a-shell-in-c/
@@ -14,7 +22,58 @@
 //http://www.linuxquestions.org/questions/linux-networking-3/ioctl-and-changing-network-interface-flags-751709/
 //usr/include/net/if.h
 //http://www.microhowto.info/howto/get_the_ip_address_of_a_network_interface_in_c_using_siocgifaddr.html
+char * list_int(char * buffer){
+    struct ifaddrs *addrs, *tmp;
+    if (getifaddrs(&addrs) == -1) {
+        PEXIT("getiffaddrs");
+    }
+    tmp = addrs;
+    memset(buffer, 0, BUFSIZE);
+    while (tmp) 
+    {
+        if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET)
+        {
+            //struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
+            strncat(buffer, tmp->ifa_name, 10);
+            //strncat(buffer, ": ",2);
+            //strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
+            strncat(buffer, "\n",2);
+            //printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
+        }
+        tmp = tmp->ifa_next;
+    }
+    
+    freeifaddrs(addrs);
+    return buffer;    
+}
 
+char * if_ipv4(char * interface, char * buffer){
+    printf("if: %s\n", interface);
+    struct ifaddrs *addrs, *tmp;
+    if (getifaddrs(&addrs) == -1) {
+        PEXIT("getiffaddrs");
+    }
+    tmp = addrs;
+    memset(buffer, 0, BUFSIZE);
+    while (tmp) 
+    {
+        //printf("%s\n", tmp->ifa_name);
+        if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET && (strcmp(interface, tmp->ifa_name) == 0)){
+            puts("got it");        
+            struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
+            strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
+            //strncat(buffer, ": ",2);
+            //struct sockaddr_in *pNetm = ((struct sockaddr_in *)tmp->ifa_netmask);
+            //printf("%s\n", inet_ntoa(pNetm->sin_addr));
+            //strncat(buffer,inet_ntoa(pNetm->sin_addr),15);
+            strncat(buffer, "\n",2);
+        }
+        tmp = tmp->ifa_next;
+    }
+    
+    freeifaddrs(addrs);
+    return buffer;     
+}
 int main(int argc, char *argv[]){
     /*
     int i = 0;
@@ -45,17 +104,20 @@ while(1){
     //free(token);
     //tokens[position] = "-1";
 
-    
+    char * interface = NULL;
     int i = 0;
     for(i = 1; i < position; i++){
         //printf("%s\n", tokens[i]);
         switch(*tokens[i]) {
             case 'l':
                 puts("list");
+                printf("%s\n",list_int(buffer));
                 break;
             case 'i':
-                
                 printf("selected if: %s\n", tokens[++i]);
+                if(tokens[i]  != NULL){
+                    interface = tokens[i];
+                }
                 break;
             case 'a':
                 puts("show all for selected interface");
@@ -68,6 +130,9 @@ while(1){
                 break;
             case '4':
                 puts("show ipv4 + mask for selected if");
+                if (interface != NULL){
+                    printf("%s\n",if_ipv4(interface, buffer));
+                }
                 break;
             case '6':
                 puts("show ipv4 + mask for selected if");
