@@ -22,6 +22,11 @@
 //http://www.linuxquestions.org/questions/linux-networking-3/ioctl-and-changing-network-interface-flags-751709/
 //usr/include/net/if.h
 //http://www.microhowto.info/howto/get_the_ip_address_of_a_network_interface_in_c_using_siocgifaddr.html
+
+//new links
+//https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/apis/getifaddrs.htm
+//http://www.binarytides.com/c-program-to-get-ip-address-from-interface-name-on-linux/
+//http://man7.org/linux/man-pages/man7/netdevice.7.html
 char * list_int(char * buffer){
     struct ifaddrs *addrs, *tmp;
     if (getifaddrs(&addrs) == -1) {
@@ -45,6 +50,12 @@ char * list_int(char * buffer){
     
     freeifaddrs(addrs);
     return buffer;    
+}
+
+void print_char(char * string){
+    char c;
+    int i = 0;
+    while(strcmp(c, '\'))
 }
 
 char * if_ipv4(char * interface, char * buffer){
