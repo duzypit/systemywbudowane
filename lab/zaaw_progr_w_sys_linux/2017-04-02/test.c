@@ -10,6 +10,9 @@
 //inet_ntoa
 #include <netinet/in.h>
 #include <arpa/inet.h>
+//ioctl
+#include <sys/ioctl.h>
+#include <linux/if.h>
 
 #define BUFSIZE 256
 #define DELIM " -\t\r\n\a"
@@ -56,7 +59,6 @@ void print_char(char * s){
 }
 
 char * if_ipv4(char * interface){
-    printf("if: %s\n", interface);
     char * buffer = calloc(BUFSIZE, sizeof(char));
     struct ifaddrs *addrs, *tmp;
     if (getifaddrs(&addrs) == -1) {
@@ -80,13 +82,22 @@ char * if_ipv4(char * interface){
     freeifaddrs(addrs);
     return buffer;     
 }
+
+void if_up(char * interface){
+	int fd = socket(PF_INET, SOCK_STREAM,0 );
+	struct ifreq ethreq;
+	memset(&ethreq, 0, sizeof(ethreq));
+	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);	
+	ioctl(fd, SIOCGIFFLAGS, &ethreq);
+	if(ethreq.ifr_flags & IFF_UP){
+		printf("%s is UP\n", ethreq.ifr_name);
+	} else {
+		printf("%s is DOWN\n", ethreq.ifr_name);
+	}
+	close(fd);
+}
+
 int main(int argc, char *argv[]){
-    /*
-    int i = 0;
-    for(i = 0; i < argc; i++){
-        printf("%s\n", argv[i]);
-    }
-    */
     char buffer[BUFSIZE] = {0};
     char **tokens = malloc(BUFSIZE * sizeof(char*));
     char *token;
@@ -131,6 +142,9 @@ while(1){
                 break;
             case 's' :
                 puts("show status for selected if");
+		if(interface != NULL){
+			if_up(interface);
+		}
                 break;
             case 'm':
                 puts("show mac for selected if");
