@@ -97,6 +97,15 @@ void if_up(char * interface){
 	close(fd);
 }
 
+/*
+void mac(char *interface){
+	int fd = socket(PF_INET, SOCK_STREAM,0);
+	struct irfeq ethreq;
+	memset(ethreq, 0, sizeog(ethreq));
+	strncpy(ethreq.ifr_name, interface,IFNAMSIZ);
+	
+}
+*/
 int main(int argc, char *argv[]){
     char buffer[BUFSIZE] = {0};
     char **tokens = malloc(BUFSIZE * sizeof(char*));
@@ -127,7 +136,6 @@ while(1){
         //printf("%s\n", tokens[i]);
         switch(*tokens[i]) {
             case 'l':
-                //puts("list");
                 printf("%s",list_int(buffer));
                 break;
             case 'i':
@@ -148,6 +156,7 @@ while(1){
                 break;
             case 'm':
                 puts("show mac for selected if");
+			
                 break;
             case '4':
                 //puts("show ipv4 + mask for selected if");
