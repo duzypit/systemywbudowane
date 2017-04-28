@@ -1,7 +1,20 @@
 #include <stdio.h>
+#include <time.h>
+
+int wartosc_obecna(int tab[], int szukana, int max){
+    int x;
+    for(x = 0;x < max; x++){
+        if(tab[x] == szukana){
+            return 1;
+        }
+    }
+    
+    return 0;
+}
 
 int main(void){
     
+   
     int tab[] = {3,5,6,7,8,4,3,6,7,4,5,7,6,7,3,6,7,5,6,8,4,8,3,4,5,5,7,3,5,6,0,9,7,9,4,5,2,7,5,0,9,7,8,4,5,0,9,7,4,5,9,0};
     int n = sizeof(tab)/sizeof(tab[0]);
     printf("rozmiar tablicy = %d\n", n);
@@ -12,8 +25,8 @@ int main(void){
     int x = 0;
     int bylo = 0;
     for(i = 0; i < n; i++){
-
-
+    bylo = wartosc_obecna(tab, tab[i], i);
+/*
         for(x = 0; x <i; x++){
             
             if(tab[x] == tab[i]){
@@ -22,6 +35,7 @@ int main(void){
                 bylo = 1;
             }
         }
+*/        
         //printf ("bylo: %d\n", bylo);
         if(bylo == 0){
             ile_roznych += 1;
@@ -47,13 +61,15 @@ int main(void){
             
             for(x = 0; x < n; x++){
                 //wypełniam tablicę unikatowymi wartościami
+/*
                 for(y = 0; y < i; y++){
                 //sprawdzam czy wartosc była już w tab_domi
                     if(tab_domi[y][0] == tab[x]){
                         bylo = 1;
                     }
                 }
-
+*/
+                bylo = wartosc_obecna(tab, tab[i], i);
                 if(bylo == 0) {
                     tab_domi[i][0] = tab[x];
                 } else {
