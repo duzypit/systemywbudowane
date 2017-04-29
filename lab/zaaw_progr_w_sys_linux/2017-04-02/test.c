@@ -65,7 +65,6 @@ char * if_ipv4(char * interface){
         PEXIT("getiffaddrs");
     }
     tmp = addrs;
-    //memset(buffer, 0, BUFSIZE);
     while (tmp) {
         if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET && (!strcmp(interface, tmp->ifa_name))){
             struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
@@ -74,11 +73,9 @@ char * if_ipv4(char * interface){
             struct sockaddr_in *pNetm = (struct sockaddr_in *)tmp->ifa_netmask;
             strncat(buffer,inet_ntoa(pNetm->sin_addr),15);
             strncat(buffer, "\n",2);
-            
         }
         tmp = tmp->ifa_next;
     }
-    
     freeifaddrs(addrs);
     return buffer;     
 }
@@ -97,15 +94,21 @@ void if_up(char * interface){
 	close(fd);
 }
 
-/*
+
 void mac(char *interface){
 	int fd = socket(PF_INET, SOCK_STREAM,0);
-	struct irfeq ethreq;
-	memset(ethreq, 0, sizeog(ethreq));
+	struct ifreq ethreq;
+	memset(&ethreq, 0, sizeof(ethreq));
 	strncpy(ethreq.ifr_name, interface,IFNAMSIZ);
-	
+    ioctl(fd, SIOCGIFFLAGS, &ethreq);
+    if(ethreq.ifr_flags & IFF_LOOPBACK){
+       printf("NO mac address for %s - loopback\n", interface);
+    } else {
+        printf("%s mac address is %s\n", interface, ethreq.ifr_hwaddr.sa_data);
+    }
+    close(fd);
 }
-*/
+
 int main(int argc, char *argv[]){
     char buffer[BUFSIZE] = {0};
     char **tokens = malloc(BUFSIZE * sizeof(char*));
@@ -115,7 +118,6 @@ while(1){
     printf(">: ");
     memset(buffer, 0, BUFSIZE);
 	fgets(buffer, sizeof(buffer), stdin);
-	//buffer[strcspn(buffer,"\r\n")] = 0;
     
     int position = 1;
     tokens[0] = argv[0];
@@ -127,13 +129,10 @@ while(1){
     
         token = strtok(NULL, DELIM);
     }
-    //free(token);
-    //tokens[position] = "-1";
 
     char * interface = NULL;
     int i = 0;
     for(i = 1; i < position; i++){
-        //printf("%s\n", tokens[i]);
         switch(*tokens[i]) {
             case 'l':
                 printf("%s",list_int(buffer));
@@ -156,7 +155,9 @@ while(1){
                 break;
             case 'm':
                 puts("show mac for selected if");
-			
+                    if(interface != NULL){
+                     mac(interface);   
+                    }
                 break;
             case '4':
                 //puts("show ipv4 + mask for selected if");
@@ -166,13 +167,13 @@ while(1){
                 }
                 break;
             case '6':
-                puts("show ipv4 + mask for selected if");
+                puts("show ipv6 + mask for selected if");
                 break;
             case 'u':
-                puts("selected if up");
+                puts("set selected if up");
                 break;
             case 'd':
-                puts("selected if down");
+                puts("set selected if down");
                 break;
             default:
                 printf("no such option: %s\n", tokens[i]);

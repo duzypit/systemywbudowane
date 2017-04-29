@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 int wartosc_obecna(int tab[], int szukana, int max){
@@ -14,9 +15,22 @@ int wartosc_obecna(int tab[], int szukana, int max){
 
 int main(void){
     
-   
-    int tab[] = {3,5,6,7,8,4,3,6,7,4,5,7,6,7,3,6,7,5,6,8,4,8,3,4,5,5,7,3,5,6,0,9,7,9,4,5,2,7,5,0,9,7,8,4,5,0,9,7,4,5,9,0};
-    int n = sizeof(tab)/sizeof(tab[0]);
+    int c = 0;
+    /*
+    while(c>0s){
+    printf("rand: %i\n", rand()%1000);
+    c   --;
+    }
+    exit(1);
+    */
+    int n = rand()%1000;
+    //int tab[] = {3,5,6,7,8,4,3,6,7,4,5,7,6,7,3,6,7,5,6,8,4,8,3,4,5,5,7,3,5,6,0,9,7,9,4,5,2,7,5,0,9,7,8,4,5,0,9,7,4,5,9,0};
+    //int n = sizeof(tab)/sizeof(tab[0]);
+    int tab[n];
+    while(c<n){
+        tab[c] = rand()%10000;
+        c++;
+    }
     printf("rozmiar tablicy = %d\n", n);
     //sprawdzam ile unikatowych wartości w tab
     
