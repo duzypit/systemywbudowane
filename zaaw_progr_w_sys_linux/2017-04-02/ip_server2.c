@@ -135,29 +135,28 @@ struct sockaddr_storage {
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s));
 		printf("server: got connection from %s\n",s);
 		
-		if(!fork()){ //this is the child process
+		pid_t pid = fork();
+		if(pid == 0){ //this is the child process
+			fprintf(stderr, "pid: %d\n", getpid());
+			fprintf(stderr, "ppid: %d\n", getppid());
+			
+
 			close(sockfd); //child doesn't need the listener
 			if(send(new_fd, "hello world!",13, 0) == -1){
 				perror("send");
-				//close(new_fd);
 				exit(0);
 			}
+
 			
 			while(strcmp(buffer, "end") != 0){
 					memset(buffer, 0, BUFF_SIZE);
 					if(recv(new_fd, buffer, BUFF_SIZE, 0) == -1){
 						PEXIT("read");
 					}
-					//sleep(1);			
 
 					buffer[strcspn(buffer,"\r\n")] = 0;
 
 					fprintf(stderr, "client: %s\n", buffer);
-
-					//int i;
-					//for(i = 0; i < (unsigned int) strlen(buffer); i++){
-					//	fprintf(stderr, "%d : %c : %d\n", i+1, buffer[i], (int) buffer[i]);
-					//}
 
 					if(strcmp(buffer, "list") == 0){
 						struct ifaddrs *addrs, *tmp;

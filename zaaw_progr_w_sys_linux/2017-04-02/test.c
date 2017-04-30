@@ -99,7 +99,7 @@ void mac(char *interface){
 	int fd = socket(PF_INET, SOCK_STREAM,0);
 	struct ifreq ethreq;
 	memset(&ethreq, 0, sizeof(ethreq));
-	strncpy(ethreq.ifr_name, interface,IFNAMSIZ);
+	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
     ioctl(fd, SIOCGIFFLAGS, &ethreq);
     if(ethreq.ifr_flags & IFF_LOOPBACK){
        printf("NO mac address for %s - loopback\n", interface);
@@ -107,6 +107,21 @@ void mac(char *interface){
         printf("%s mac address is %s\n", interface, ethreq.ifr_hwaddr.sa_data);
     }
     close(fd);
+}
+
+void ip(char *interface, char *addr){
+	int fd = socket(PF_INET, SOCK_STREAM,0);
+	struct ifreq ethreq;
+	memset(&ethreq, 0, sizeof(ethreq));    
+	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
+    ethreq.ifr_addr.sa_family = AF_INET;
+    
+    struct sckaddr_in* sin;
+    inet_pton(AF_INET, addr, a->sin_addr);
+    ioctl(fd, SIOCSIFADDR, &ethreq);
+    printf("Ipv4 set to: %s\n", addr);
+    close(fd);
+
 }
 
 int main(int argc, char *argv[]){
