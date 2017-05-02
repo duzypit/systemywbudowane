@@ -1,0 +1,26 @@
+//sortowanie
+//int tab[n]
+//n
+start;
+int tab[n];
+int n;
+int i;
+int tmp;
+for(i = 0; i < n; i++){
+  if(tab[i+1] < tab[i]){
+    tmp = tab[i];
+    tab[i] = tab[i+1];
+    tab[i+1] = tmp;
+    i = 0;
+  }
+}
+
+//wyświetl elementy tab[];
+stop;
+
+// 3,6,2,4,7
+//0 - 3,6,2,4,7
+//1 - 3,2,6,4,7
+//0 - 2,3,6,4,7
+//0 - 
+//4 -

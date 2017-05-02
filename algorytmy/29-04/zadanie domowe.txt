@@ -1,0 +1,6 @@
+Zadanie domowe:
+
+przygotować trzy funkcje sortujące:
+-bubble sort
+-shell sort
+- i trzecią??

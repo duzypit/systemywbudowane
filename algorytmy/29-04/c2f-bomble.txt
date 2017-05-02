@@ -1,0 +1,22 @@
+//bubble sort
+start;
+int tab[n];
+int n;
+int i;
+int tmp;
+int zamiana = 1;
+
+while(zamiania = 1){
+  zamiana = 0;
+  for(i = 0; i < n; i++){
+    if(tab[i+1] < tab[i]){
+      tmp = tab[i];
+      tab[i] = tab[i+1];
+      tab[i+1] = tmp;
+      zamiana = 1;
+    }
+  }
+}
+//wyświetl elementy tab[];
+stop;
+
