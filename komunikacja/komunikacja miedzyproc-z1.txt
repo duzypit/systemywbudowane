@@ -1,0 +1,20 @@
+Treść zadania
+1. Zaimplementuj listę korzystając z dynamicznej alokacji pamięci.
+2. Węzeł listy ma być zdefiniowany jako:
+typedef struct List{
+int value;
+struct * List next;
+}
+
+3. zaimplementuj metody dostępu do listy:
+
+void push_back();
+int pop_front();
+- zwracana wartość to wartość pola value z węzła listy
+- jeżeli lista jest pusta, zwracana wartosć wynosi -1
+
+4. stwórz pulę N-wątków (N >= 3) z czego:
+0-wątek -> dodaje losowe dane do listy
+<1-N) -> wątki ściągają (pop_front) dane z listy
+5. Zidentyfikuj stacje krytyczne w programie i odpowiednio je zabezpiecz
+6.Jeżeli lista jest pusta, wówczas czytające wątki mają być uśpione.

@@ -1,20 +1,32 @@
 #include <stdio.h>
 
-void print_tab(int* t, int n){
-	//printf("first elem of t is: %i", t[0]);
-	int i;
-	for(i = 0; i < n; i++){
-		printf("el: %d, val: %d\n",i, t[i]);
-	}
+
+void bubble(int* t, int n);
+void print_flat(int* t, int n);
+
+int main(void){
+	//tablica do posortowania
+	int tab[] = {0,9,2,7,3,4,5,8,1};
+	//rozmiar tablicy
+	int n = sizeof(tab) / sizeof(tab[0]);
+	print_flat(tab, n);
+	//sortowanie
+	bubble(tab, n);
+	//wynik
+	puts("* bubble");
+	print_flat(tab, n);
+
+	return 0;
 }
 
 void bubble(int* t, int n){
 	int i, tmp;
 
 	int change;
-	do{
+	do{ //powtarzaj, jeśli była zamiana
 		change = 0;
 		for(i = 0; i < n; i++){
+			//jeśli element większy od następnego - zamień
 			if(t[i] > t[i+1]){
 				tmp = t[i];
 				t[i] = t[i+1];
@@ -25,16 +37,11 @@ void bubble(int* t, int n){
 	} while (change == 1);
 }
 
-int main(void){
-	int tab[] = {0,9,2,7,3,4,5,8,1};
 
-	int n = sizeof(tab) / sizeof(tab[0]);
-	puts("Init");
-	print_tab(tab, n);
-
-	bubble(tab, n);
-	puts("----------bubbles");
-	print_tab(tab, n);
-
-	return 0;
+void print_flat(int* t, int n){
+	int i;
+	for(i = 0; i < n; i++){
+		printf("%d ",t[i]);
+	}
+	printf("\n");
 }
