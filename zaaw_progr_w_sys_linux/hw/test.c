@@ -17,18 +17,8 @@
 #define BUFSIZE 256
 #define DELIM " -\t\r\n\a"
 #define PEXIT(str) {perror(str);exit(1);}
-//http://stackoverflow.com/questions/15472299/split-string-into-tokens-and-save-them-in-an-array
-//http://man7.org/linux/man-pages/man3/getopt.3.html
-//https://brennan.io/2015/01/16/write-a-shell-in-c/
-//http://stackoverflow.com/questions/4936052/what-are-the-network-ioctl-man-pages
 //https://www.google.pl/search?q=network+interface+ioctl&ie=utf-8&oe=utf-8&client=firefox-b-ab&gfe_rd=cr&ei=DmD3WKD6GeWP8QfZ9oL4AQ
 //http://www.linuxquestions.org/questions/linux-networking-3/ioctl-and-changing-network-interface-flags-751709/
-//usr/include/net/if.h
-//http://www.microhowto.info/howto/get_the_ip_address_of_a_network_interface_in_c_using_siocgifaddr.html
-
-//new links
-//https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/apis/getifaddrs.htm
-//http://www.binarytides.com/c-program-to-get-ip-address-from-interface-name-on-linux/
 //http://man7.org/linux/man-pages/man7/netdevice.7.html
 char * list_int(char * buffer){
     struct ifaddrs *addrs, *tmp;
@@ -39,7 +29,6 @@ char * list_int(char * buffer){
     memset(buffer, 0, BUFSIZE);
     while (tmp) {
         if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET) {
-            //printf("len: %lu\n", strlen(tmp->ifa_name));
             strncat(buffer, tmp->ifa_name, 10);
             strncat(buffer, "\n",2);
         }
@@ -96,7 +85,7 @@ void if_up(char * interface){
 
 
 void mac(char *interface){
-	int fd = socket(PF_INET, SOCK_STREAM,0);
+	int fd = socket(PF_INET, SOCK_DGRAM,0);
 	struct ifreq ethreq;
 	memset(&ethreq, 0, sizeof(ethreq));
 	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
@@ -105,22 +94,23 @@ void mac(char *interface){
     if(ethreq.ifr_flags & IFF_LOOPBACK){
        printf("NO mac address for %s - loopback\n", interface);
     } else {
+        ioctl(fd, SIOCGIFHWADDR, &ethreq);
         //unsigned char* mac = (unsigned char*)ethreq.ifr_hwaddr.sa_data;
         //printf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
     printf("Device %s -> Ethernet %02x:%02x:%02x:%02x:%02x:%02x\n", interface,
-      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[0],
-      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[1],
-      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[2],
-      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[3],
-      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[4],
-      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[5]);        //printf("%s mac address is %s\n", interface, fmac);
+                (unsigned char)ethreq.ifr_hwaddr.sa_data[0],
+                (unsigned char)ethreq.ifr_hwaddr.sa_data[1],
+                (unsigned char)ethreq.ifr_hwaddr.sa_data[2],
+                (unsigned char)ethreq.ifr_hwaddr.sa_data[3],
+                (unsigned char)ethreq.ifr_hwaddr.sa_data[4],
+                (unsigned char)ethreq.ifr_hwaddr.sa_data[5]);
     }
 
     close(fd);
 }
 
-//void ip(char *interface, char *addr){
-	/*int fd = socket(PF_INET, SOCK_STREAM,0);
+void ip(char *interface, char *addr){
+	int fd = socket(PF_INET, SOCK_STREAM,0);
 	struct ifreq ethreq;
 	memset(&ethreq, 0, sizeof(ethreq));    
 	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
@@ -130,10 +120,10 @@ void mac(char *interface){
     inet_pton(AF_INET, addr, a->sin_addr);
     ioctl(fd, SIOCSIFADDR, &ethreq);
     printf("Ipv4 set to: %s\n", addr);
-    close(fd);*/
-// struct sockaddr_in* ipaddr = (struct sockaddr_in*)&ifr.ifr_addr;
-// printf("IP address: %s\n",inet_ntoa(ipaddr->sin_addr));
-//}
+    close(fd);
+ struct sockaddr_in* ipaddr = (struct sockaddr_in*)&ifr.ifr_addr;
+ printf("IP address: %s\n",inet_ntoa(ipaddr->sin_addr));
+}
 
 int main(int argc, char *argv[]){
     char buffer[BUFSIZE] = {0};
