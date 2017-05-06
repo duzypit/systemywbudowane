@@ -134,30 +134,39 @@ struct sockaddr_storage {
 		
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s));
 		printf("server: got connection from %s\n",s);
-		
+
+//fork		
 		pid_t pid = fork();
+
 		if(pid == 0){ //this is the child process
-			fprintf(stderr, "pid: %d\n", getpid());
-			fprintf(stderr, "ppid: %d\n", getppid());
-			
+			//fprintf(stderr, "pid: %d\n", getpid());
+			//fprintf(stderr, "ppid: %d\n", getppid());
+			pid_t cpid = getpid();
 
 			close(sockfd); //child doesn't need the listener
-			if(send(new_fd, "hello world!",13, 0) == -1){
+			sprintf(buffer, "%s %d", buffer, cpid);
+			if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
 				perror("send");
 				exit(0);
 			}
 
 			
 			while(strcmp(buffer, "end") != 0){
+					//fill buff with 0s
 					memset(buffer, 0, BUFF_SIZE);
+
+					//recieve data from client
 					if(recv(new_fd, buffer, BUFF_SIZE, 0) == -1){
 						PEXIT("read");
 					}
 
+					//remove \r\n from msg
 					buffer[strcspn(buffer,"\r\n")] = 0;
 
-					fprintf(stderr, "client: %s\n", buffer);
+					//write msg to stderr
+					fprintf(stderr, "client %d: %s\n",cpid, buffer);
 
+					//parse commands block
 					if(strcmp(buffer, "list") == 0){
 						struct ifaddrs *addrs, *tmp;
 						if (getifaddrs(&addrs) == -1) {
@@ -171,10 +180,7 @@ struct sockaddr_storage {
 							{
 								struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
 								strncat(buffer, tmp->ifa_name, 10);
-								//strncat(buffer, ": ",2);
-								//strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
 								strncat(buffer, "\n",2);
-								//printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
 							}
 							tmp = tmp->ifa_next;
 						}
@@ -182,7 +188,8 @@ struct sockaddr_storage {
 						freeifaddrs(addrs);
 						puts(buffer);
 					}
-//if buffer not empty
+					
+					//send return msg
 					if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
 						perror("send");
 						exit(0);

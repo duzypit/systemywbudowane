@@ -1,0 +1,12 @@
+netcat - obczaj
+github.com/izoslav/wizut-ipc
+c: gcc <nazwa> -lrt
+c++: g++ <nazwa> -lrt -lpthread
+lld a.out - dep do uruchomienia
+man ld
+gcc ... -c - kompiluje do plików .o - kod maszynowy platformy
+kompilacja:
+1. preprocessor
+2. syntax
+3. kompilacja -> .o
+4. konsolidacja - link

@@ -101,28 +101,39 @@ void mac(char *interface){
 	memset(&ethreq, 0, sizeof(ethreq));
 	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
     ioctl(fd, SIOCGIFFLAGS, &ethreq);
+
     if(ethreq.ifr_flags & IFF_LOOPBACK){
        printf("NO mac address for %s - loopback\n", interface);
     } else {
-        printf("%s mac address is %s\n", interface, ethreq.ifr_hwaddr.sa_data);
+        //unsigned char* mac = (unsigned char*)ethreq.ifr_hwaddr.sa_data;
+        //printf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    printf("Device %s -> Ethernet %02x:%02x:%02x:%02x:%02x:%02x\n", interface,
+      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[0],
+      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[1],
+      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[2],
+      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[3],
+      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[4],
+      (int) ((unsigned char *) &ethreq.ifr_hwaddr.sa_data)[5]);        //printf("%s mac address is %s\n", interface, fmac);
     }
+
     close(fd);
 }
 
-void ip(char *interface, char *addr){
-	int fd = socket(PF_INET, SOCK_STREAM,0);
+//void ip(char *interface, char *addr){
+	/*int fd = socket(PF_INET, SOCK_STREAM,0);
 	struct ifreq ethreq;
 	memset(&ethreq, 0, sizeof(ethreq));    
 	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
     ethreq.ifr_addr.sa_family = AF_INET;
     
-    struct sckaddr_in* sin;
+    struct scokaddr_in* sin;
     inet_pton(AF_INET, addr, a->sin_addr);
     ioctl(fd, SIOCSIFADDR, &ethreq);
     printf("Ipv4 set to: %s\n", addr);
-    close(fd);
-
-}
+    close(fd);*/
+// struct sockaddr_in* ipaddr = (struct sockaddr_in*)&ifr.ifr_addr;
+// printf("IP address: %s\n",inet_ntoa(ipaddr->sin_addr));
+//}
 
 int main(int argc, char *argv[]){
     char buffer[BUFSIZE] = {0};
@@ -164,9 +175,9 @@ while(1){
                 break;
             case 's' :
                 puts("show status for selected if");
-		if(interface != NULL){
-			if_up(interface);
-		}
+            		if(interface != NULL){
+            			if_up(interface);
+            		}
                 break;
             case 'm':
                 puts("show mac for selected if");
@@ -177,12 +188,8 @@ while(1){
             case '4':
                 //puts("show ipv4 + mask for selected if");
                 if (interface != NULL){
-                    //printf("if: %s\n", interface);
                     printf("%s",if_ipv4(interface));
                 }
-                break;
-            case '6':
-                puts("show ipv6 + mask for selected if");
                 break;
             case 'u':
                 puts("set selected if up");
@@ -192,45 +199,9 @@ while(1){
                 break;
             default:
                 printf("no such option: %s\n", tokens[i]);
-                //fprintf(stderr, "Usage: %s [l] [-i if] [asm46]\n", argv[0]);
-                //exit(EXIT_FAILURE);
         }        
     }
     
-/*    
-    int opt;
-    while((opt = getopt(position, tokens, "li:asm46")) != -1)
-        //printf("c = %c (%d)\n",(char) opt, opt);
-        switch(opt) {
-            case 'l':
-                puts("list");
-                break;
-            case 'i':
-                printf("set interface: %s\n", optarg);
-                break;
-            case 'a':
-                puts("show all for selected interface");
-                break;
-            case 's' :
-                puts("show status for selected if");
-                break;
-            case 'm':
-                puts("show mac for selected if");
-                break;
-            case '4':
-                puts("show ipv4 + mask for selected if");
-                break;
-            case '6':
-                puts("show ipv4 + mask for selected if");
-                break;
-            default:
-                printf("opt: %d\n", opt);
-                fprintf(stderr, "Usage: %s [l] [-i if] [asm46]\n", argv[0]);
-                //exit(EXIT_FAILURE);
-        }
-    
-    //free(tokens);
-*/
 }    
     return 0;
 }

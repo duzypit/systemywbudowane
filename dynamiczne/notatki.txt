@@ -1,0 +1,24 @@
+malloc == free (c++)
+new
+new[]
+
+
+enkapsulacja
+
+struct A_t{
+int a;
+int b;
+};
+
+struct A_t a; a.a = 5;
+why use malloc to init ptr
+
+cpp:
+struct to nazwa typu
+A_t a
+A_t* aphr = new A_t;
+delete aptr;
+
+
+scope guard
+raii
