@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <stdlib.h> //exit
 #include <string.h>
 //ifaddr
 #include <sys/types.h>
@@ -95,9 +95,7 @@ void mac(char *interface){
        printf("NO mac address for %s - loopback\n", interface);
     } else {
         ioctl(fd, SIOCGIFHWADDR, &ethreq);
-        //unsigned char* mac = (unsigned char*)ethreq.ifr_hwaddr.sa_data;
-        //printf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    printf("Device %s -> Ethernet %02x:%02x:%02x:%02x:%02x:%02x\n", interface,
+        printf("Device %s -> Ethernet %02x:%02x:%02x:%02x:%02x:%02x\n", interface,
                 (unsigned char)ethreq.ifr_hwaddr.sa_data[0],
                 (unsigned char)ethreq.ifr_hwaddr.sa_data[1],
                 (unsigned char)ethreq.ifr_hwaddr.sa_data[2],
@@ -109,20 +107,23 @@ void mac(char *interface){
     close(fd);
 }
 
-void ip(char *interface, char *addr){
+void change_ip(char *interface, char *a){
 	int fd = socket(PF_INET, SOCK_STREAM,0);
 	struct ifreq ethreq;
 	memset(&ethreq, 0, sizeof(ethreq));    
 	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);
     ethreq.ifr_addr.sa_family = AF_INET;
+    struct sockaddr_in* addr = (struct sockaddr_in*)&ethreq.ifr_addr;
+    inet_pton(AF_INET, a, &addr->sin_addr);
+
     
-    struct scokaddr_in* sin;
-    inet_pton(AF_INET, addr, a->sin_addr);
     ioctl(fd, SIOCSIFADDR, &ethreq);
-    printf("Ipv4 set to: %s\n", addr);
-    close(fd);
- struct sockaddr_in* ipaddr = (struct sockaddr_in*)&ifr.ifr_addr;
- printf("IP address: %s\n",inet_ntoa(ipaddr->sin_addr));
+    printf("Ipv4 set to: %s\n", a);
+    close(fd); 
+}
+
+void change_netmask(char *interface, char *m){
+    //http://stackoverflow.com/questions/6652384/how-to-set-the-ip-address-from-c-in-linux
 }
 
 int main(int argc, char *argv[]){
@@ -161,7 +162,11 @@ while(1){
                 }
                 break;
             case 'a':
-                puts("show all for selected interface");
+                puts("change IPv4 addr\n");
+                    if(interface != NULL){
+                        //printf("ipaddress: %s\n", tokens[++i]);
+                        change_ip(interface, tokens[++i]);
+                    }                
                 break;
             case 's' :
                 puts("show status for selected if");
@@ -186,6 +191,24 @@ while(1){
                 break;
             case 'd':
                 puts("set selected if down");
+                break;
+            case 'q':
+                puts("Bye!");
+                exit(0);
+                break;    
+            case '?':
+                printf("\nCommands:\n"
+                    "q - exit\n"
+                    "l - list ifs\n\n"
+                    "i <if_name> x - select if and then execute x command\n\n"
+                    "i <if_name> s - show if status\n"
+                    "i <if_name> h - show if hwaddr\n"
+                    "i <if_name> 4 - show if IPv$ addr : netmask\n\n"
+                    "i <if_name> a <addr> - change addr\n"
+                    "i <if_name> m <hwaddr> - change mac\n"
+                    "i <if_name> u - set selected if up\n"
+                    "i <if_name> d - set selected if down\n"
+                    );
                 break;
             default:
                 printf("no such option: %s\n", tokens[i]);
