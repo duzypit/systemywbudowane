@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <sys/types.h>
+#include <sys/types.h> //getaddrinfo
 #include <sys/wait.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <sys/socket.h> //getaddrinfo
+#include <netdb.h> //getaddrinfo
 #include <sys/un.h>
 #include <string.h>
 #include <unistd.h>
@@ -47,7 +47,7 @@ char * list_int(char * buffer){
     while (tmp) {
         if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET) {
             strncat(buffer, tmp->ifa_name, 10);
-            strncat(buffer, "\n",2);
+            strncat(buffer, " ",1);
         }
         tmp = tmp->ifa_next;
     }
@@ -65,7 +65,7 @@ void print_char(char * s){
 }
 
 char * if_ipv4(char * interface){
-    char * buffer = calloc(BUFF_SIZE, sizeof(char));
+    char * result = calloc(BUFF_SIZE, sizeof(char));
     struct ifaddrs *addrs, *tmp;
     if (getifaddrs(&addrs) == -1) {
         PEXIT("getiffaddrs");
@@ -74,30 +74,32 @@ char * if_ipv4(char * interface){
     while (tmp) {
         if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET && (!strcmp(interface, tmp->ifa_name))){
             struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
-            strncat(buffer,inet_ntoa(pAddr->sin_addr),15);
-            strncat(buffer, ": ",2);
+            strncat(result,inet_ntoa(pAddr->sin_addr),15);
+            strncat(result, " ",1);
             struct sockaddr_in *pNetm = (struct sockaddr_in *)tmp->ifa_netmask;
-            strncat(buffer,inet_ntoa(pNetm->sin_addr),15);
-            strncat(buffer, "\n",2);
+            strncat(result,inet_ntoa(pNetm->sin_addr),15);
+            strncat(result, " ",1);
         }
         tmp = tmp->ifa_next;
     }
     freeifaddrs(addrs);
-    return buffer;     
+    return result;     
 }
 
-void if_up(char * interface){
+char * if_up(char * interface){
 	int fd = socket(PF_INET, SOCK_STREAM,0 );
 	struct ifreq ethreq;
 	memset(&ethreq, 0, sizeof(ethreq));
 	strncpy(ethreq.ifr_name, interface, IFNAMSIZ);	
 	ioctl(fd, SIOCGIFFLAGS, &ethreq);
+	char * result = NULL;
 	if(ethreq.ifr_flags & IFF_UP){
-		printf("%s is UP\n", ethreq.ifr_name);
+		sprintf(result, "%s is UP\n", ethreq.ifr_name);
 	} else {
-		printf("%s is DOWN\n", ethreq.ifr_name);
+		sprintf(result, "%s is DOWN\n", ethreq.ifr_name);
 	}
 	close(fd);
+	return(result);
 }
 
 
@@ -149,51 +151,57 @@ char * dispatcher(char * buffer){
 	char **tokens = malloc(BUFF_SIZE * sizeof(char*));
     char *token;
     int position = 0;
-    
+    char * interface = NULL;
+
     token = strtok(buffer, DELIM);
     while(token != NULL){
         tokens[position] = token;
         position++;
-    
         token = strtok(NULL, DELIM);
     }
 
-    char * interface = NULL;
+    
     int i = 0;
     for(i = 0; i < position; i++){
         switch(*tokens[i]) {
             case 'l':
-                printf("%s",list_int(buffer));
+                fprintf(stdout, "%s", list_int(buffer));
+            	//list all ifs
+            	return(list_int(buffer));
                 break;
             case 'i':
                 printf("selected if: %s\n", tokens[++i]);
+            	//assign expected if to var
                 if(tokens[i]  != NULL){  
                     interface = tokens[i];
                 }
                 break;
             case 'a':
-               // puts("change IPv4 addr\n");
+            	printf("change IPv4 addr to given");
+               //change IPv4 addr to given
                     if(interface != NULL){
-                        //printf("ipaddress: %s\n", tokens[++i]);
                         return(change_ip(interface, tokens[++i]));
                     }                
                 break;
             case 's' :
-                puts("show status for selected if");
+            	puts("show status for selected if");
+                //show status for selected if
             		if(interface != NULL){
-            			if_up(interface);
+            			return(if_up(interface));
             		}
                 break;
             case 'm':
-                puts("show mac for selected if");
+            	puts("show mac for selected if");
+                //show mac for selected if
                     if(interface != NULL){
-                     mac(interface);   
+                    	return(mac(interface));   
                     }
                 break;
             case '4':
-                //puts("show ipv4 + mask for selected if");
+            	puts("show ipv4 + mask for selected if");
+                //show ipv4 + mask for selected if
                 if (interface != NULL){
-                    printf("%s",if_ipv4(interface));
+                    return(if_ipv4(interface));
                 }
                 break;
             case 'u':
@@ -202,37 +210,12 @@ char * dispatcher(char * buffer){
             case 'd':
                 puts("set selected if down");
                 break;
-            case 'q':
-                puts("Bye!");
-                exit(0);
-                break;    
-            case '?':
-                printf("\nCommands:\n"
-                    "q - exit\n"
-                    "l - list ifs\n\n"
-                    "i <if_name> x - select if and then execute x command\n\n"
-                    "i <if_name> s - show if status\n"
-                    "i <if_name> h - show if hwaddr\n"
-                    "i <if_name> 4 - show if IPv$ addr : netmask\n\n"
-                    "i <if_name> a <addr> - change addr\n"
-                    "i <if_name> m <hwaddr> - change mac\n"
-                    "i <if_name> u - set selected if up\n"
-                    "i <if_name> d - set selected if down\n"
-                    );
-                break;
             default:
-                printf("no such option: %s\n", tokens[i]);
+                printf("No such option: %s\n", tokens[i]);
         }        
     }	
 }
 
-int main(void){
-	system("clear");
-	//char * buff_ptr = calloc(sizeof(char) * BUFF_SIZE);
-	char buffer[BUFF_SIZE] = {0};
-	int sockfd, new_fd; //listen on sockfd, new connection on new_fd
-	struct addrinfo hints, *servinfo, *p;
-	
 	// struct addrinfo {
 	// 	int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
 	// 	int              ai_family;    // AF_INET, AF_INET6, AF_UNSPEC
@@ -243,9 +226,8 @@ int main(void){
 	// 	char            *ai_canonname; // full canonical hostname
 	// 	struct addrinfo *ai_next;      // linked list, next node
 	// };
-	
-	struct sockaddr_storage their_addr; // connector's address information
-	
+
+
 	// struct sockaddr_storage {
 	//     sa_family_t  ss_family;     // address family
 	//     // all this is padding, implementation specific, ignore it:
@@ -253,10 +235,7 @@ int main(void){
 	//     int64_t   __ss_align;
 	//     char      __ss_pad2[_SS_PAD2SIZE];
 	// };
-	
 
-	socklen_t sin_size;
-	struct sigaction sa;
 
 	// struct sigaction {
 	// 	void     (*sa_handler)(int);
@@ -266,16 +245,26 @@ int main(void){
 	// 	void     (*sa_restorer)(void);
 	// };
 
+
+int main(void){
+	system("clear");
+	char buffer[BUFF_SIZE] = {0};
+	int sockfd, new_fd; //listen on sockfd, new connection on new_fd
+	struct addrinfo hints, *servinfo, *p;
+	struct sockaddr_storage their_addr; // connector's address information
+	socklen_t sin_size;
+	struct sigaction sa;
 	int yes = 1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
+
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my ip
 	
-	if((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0){
+	if((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0){ //
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -322,18 +311,15 @@ int main(void){
 		if (new_fd == -1) {
 			PCONT("accept");
 		}
-		
+	
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s));
 		printf("server: got connection from %s\n",s);
-		
-		pid_t pid = fork();
-
+	
+		pid_t pid = fork(); 
 		if(pid == 0){ //this is the child process
-			//fprintf(stderr, "pid: %d\n", getpid());
-			//fprintf(stderr, "ppid: %d\n", getppid());
 			pid_t cpid = getpid();
-
 			close(sockfd); //child doesn't need the listener
+			
 			sprintf(buffer, "%s %d", buffer, cpid);
 			if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
 				perror("send");
@@ -356,11 +342,12 @@ int main(void){
 					//write msg to stderr
 					fprintf(stderr, "client %d: %s\n",cpid, buffer);
 
-					//parse commands block
-					dispatcher(buffer);
+					//parse commands block and return value;
+					char * result = NULL;
+					result = dispatcher(buffer);
 					
 					//send return msg
-					if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
+					if(send(new_fd, result,sizeof(result), 0) == -1){
 						perror("send");
 						exit(0);
 					}
@@ -375,7 +362,7 @@ int main(void){
 			return 0;
 		}
 	} //end while(1)
-	
+	close(new_fd); // parent doesn't need this
 	return 0;	
 	
 }

@@ -77,31 +77,48 @@ int main(int argc, char *argv[]){
 	}
 	
 	printf("client: received %s\n", buffer);
-	printf("end command = break\n");
-	while(strcmp(buffer, "end") != 0){
+	printf("? - help, q - quit\n");
+	while(1){
 		printf(">: ");
 		memset(buffer, 0, BUFF_SIZE);
 		fgets(buffer, sizeof(buffer), stdin);
 		buffer[strcspn(buffer,"\r\n")] = 0;
-		
-		
-		if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
-			PEXIT("send");
-		}
-		memset(buffer, 0, BUFF_SIZE);
+				
+		switch((int)buffer[0]){
+            case 'q':
+            	//quit - move this section to client
+                puts("Bye!");
+                close(sockfd);	
+                exit(0);
+                break;    
+            case '?':
+            	//help - move this section to client
+                printf("\nCommands:\n"
+                    "q - exit\n"
+                    "l - list ifs\n\n"
+                    "i <if_name> x - select if and then execute x command\n\n"
+                    "i <if_name> s - show if status\n"
+                    "i <if_name> h - show if hwaddr\n"
+                    "i <if_name> 4 - show if IPv$ addr : netmask\n\n"
+                    "i <if_name> a <addr> - change addr\n"
+                    "i <if_name> m <hwaddr> - change mac\n"
+                    "i <if_name> u - set selected if up\n"
+                    "i <if_name> d - set selected if down\n"
+                    );
+                break;
+            default:
+				if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
+					PEXIT("send");
+				}
+				memset(buffer, 0, BUFF_SIZE);
 
-		if((recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
-			PEXIT("read");
-		}
-	
-		printf("Server: %s\n", buffer);
-		//break;
-		if(strcmp(buffer, "end") == 0 ) {
-			puts("Bye!");
-			break;
+				if((recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
+					PEXIT("read");
+				}
+				printf("Server: %s\n", buffer);            
 		}
 	}	
 	
-	close(sockfd);	
+
 	return 0;
 }
