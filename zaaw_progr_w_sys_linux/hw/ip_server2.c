@@ -148,6 +148,7 @@ char * change_ip(char *interface, char *a){
 // }
 
 char * dispatcher(char * buffer){
+	printf("Hi, i'm dispatcher\n");
 	char **tokens = malloc(BUFF_SIZE * sizeof(char*));
     char *token;
     int position = 0;
@@ -165,53 +166,53 @@ char * dispatcher(char * buffer){
     for(i = 0; i < position; i++){
         switch(*tokens[i]) {
             case 'l':
-                fprintf(stdout, "%s", list_int(buffer));
+                //fprintf(stdout, "%s", list_int(buffer));
             	//list all ifs
             	return(list_int(buffer));
                 break;
             case 'i':
-                printf("selected if: %s\n", tokens[++i]);
+                //printf("selected if: %s\n", tokens[++i]);
             	//assign expected if to var
                 if(tokens[i]  != NULL){  
                     interface = tokens[i];
                 }
                 break;
-            case 'a':
-            	printf("change IPv4 addr to given");
-               //change IPv4 addr to given
-                    if(interface != NULL){
-                        return(change_ip(interface, tokens[++i]));
-                    }                
-                break;
-            case 's' :
-            	puts("show status for selected if");
-                //show status for selected if
-            		if(interface != NULL){
-            			return(if_up(interface));
-            		}
-                break;
-            case 'm':
-            	puts("show mac for selected if");
-                //show mac for selected if
-                    if(interface != NULL){
-                    	return(mac(interface));   
-                    }
-                break;
+            // case 'a':
+            // 	//printf("change IPv4 addr to given");
+            //    //change IPv4 addr to given
+            //         if(interface != NULL){
+            //             return(change_ip(interface, tokens[++i]));
+            //         }                
+            //     break;
+            // case 's' :
+            // 	//puts("show status for selected if");
+            //     //show status for selected if
+            // 		if(interface != NULL){
+            // 			return(if_up(interface));
+            // 		}
+            //     break;
+            // case 'm':
+            // 	//puts("show mac for selected if");
+            //     //show mac for selected if
+            //         if(interface != NULL){
+            //         	return(mac(interface));   
+            //         }
+            //     break;
             case '4':
-            	puts("show ipv4 + mask for selected if");
+            	//return("show ipv4 + mask for selected if");
                 //show ipv4 + mask for selected if
                 if (interface != NULL){
                     return(if_ipv4(interface));
                 }
                 break;
-            case 'u':
-                puts("set selected if up");
-                break;
-            case 'd':
-                puts("set selected if down");
-                break;
+            // case 'u':
+            //     return("set selected if up");
+            //     break;
+            // case 'd':
+            //     return("set selected if down");
+            //     break;
             default:
-                printf("No such option: %s\n", tokens[i]);
+                return("No such option!");
         }        
     }	
 }
@@ -245,6 +246,13 @@ char * dispatcher(char * buffer){
 	// 	void     (*sa_restorer)(void);
 	// };
 
+void ptr_print_col(char * ptr){
+	int i = 0;
+	while(ptr[i] != '\0'){
+		printf("i: %d, c: %c\n", (int) ptr[i], (char)ptr[i]);
+		i++;
+	}
+}
 
 int main(void){
 	system("clear");
@@ -327,7 +335,7 @@ int main(void){
 			}
 
 			
-			while(strcmp(buffer, "end") != 0){
+			while(1){
 					//fill buff with 0s
 					memset(buffer, 0, BUFF_SIZE);
 
@@ -341,13 +349,15 @@ int main(void){
 
 					//write msg to stderr
 					fprintf(stderr, "client %d: %s\n",cpid, buffer);
-
+					//ptr_print_col(buffer);
 					//parse commands block and return value;
-					char * result = NULL;
+					char * result = calloc(BUFF_SIZE, sizeof(char));
+
 					result = dispatcher(buffer);
-					
+					puts(result);
+
 					//send return msg
-					if(send(new_fd, result,sizeof(result), 0) == -1){
+					if(send(new_fd, result,BUFF_SIZE, 0) == -1){
 						perror("send");
 						exit(0);
 					}
