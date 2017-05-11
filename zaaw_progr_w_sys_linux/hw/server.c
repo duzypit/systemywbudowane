@@ -37,13 +37,14 @@ void * get_in_addr(struct sockaddr *sa){
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-char * list_int(char * buffer){
+char * list_int(){
     struct ifaddrs *addrs, *tmp;
     if (getifaddrs(&addrs) == -1) {
         PEXIT("getiffaddrs");
     }
     tmp = addrs;
-    memset(buffer, 0, BUFF_SIZE);
+    char * buffer = calloc(BUFF_SIZE, sizeof(char));
+    //memset(buffer, 0, BUFF_SIZE);
     while (tmp) {
         if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET) {
             strncat(buffer, tmp->ifa_name, 10);
@@ -148,7 +149,7 @@ char * change_ip(char *interface, char *a){
 // }
 
 char * dispatcher(char * buffer){
-	printf("Hi, i'm dispatcher\n");
+	char * result = malloc(BUFF_SIZE * sizeof(char));	
 	char **tokens = malloc(BUFF_SIZE * sizeof(char*));
     char *token;
     int position = 0;
@@ -166,43 +167,38 @@ char * dispatcher(char * buffer){
     for(i = 0; i < position; i++){
         switch(*tokens[i]) {
             case 'l':
-                //fprintf(stdout, "%s", list_int(buffer));
             	//list all ifs
-            	return(list_int(buffer));
+            	result = list_int();
                 break;
             case 'i':
-                //printf("selected if: %s\n", tokens[++i]);
             	//assign expected if to var
                 if(tokens[i]  != NULL){  
-                    interface = tokens[i];
+                    interface = tokens[++i];
                 }
                 break;
-            // case 'a':
-            // 	//printf("change IPv4 addr to given");
-            //    //change IPv4 addr to given
-            //         if(interface != NULL){
-            //             return(change_ip(interface, tokens[++i]));
-            //         }                
-            //     break;
-            // case 's' :
-            // 	//puts("show status for selected if");
-            //     //show status for selected if
-            // 		if(interface != NULL){
-            // 			return(if_up(interface));
-            // 		}
-            //     break;
-            // case 'm':
-            // 	//puts("show mac for selected if");
-            //     //show mac for selected if
-            //         if(interface != NULL){
-            //         	return(mac(interface));   
-            //         }
-            //     break;
+            case 'a':
+            	//printf("change IPv4 addr to given");
+               //change IPv4 addr to given
+                    if(interface != NULL){
+                        result = change_ip(interface, tokens[++i]);
+                    }                
+                break;
+            case 's' :
+                //show status for selected if
+            		if(interface != NULL){
+            			result = if_up(interface);
+            		}
+                break;
+            case 'm':
+                //show mac for selected if
+                    if(interface != NULL){
+                    	result = mac(interface);   
+                    }
+                break;
             case '4':
-            	//return("show ipv4 + mask for selected if");
                 //show ipv4 + mask for selected if
                 if (interface != NULL){
-                    return(if_ipv4(interface));
+                    result = if_ipv4(interface);
                 }
                 break;
             // case 'u':
@@ -212,39 +208,12 @@ char * dispatcher(char * buffer){
             //     return("set selected if down");
             //     break;
             default:
-                return("No such option!");
+                result = "No such option!";
         }        
-    }	
+    }
+
+    return result;	
 }
-
-	// struct addrinfo {
-	// 	int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
-	// 	int              ai_family;    // AF_INET, AF_INET6, AF_UNSPEC
-	// 	int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
-	// 	int              ai_protocol;  // use 0 for "any"
-	// 	size_t           ai_addrlen;   // size of ai_addr in bytes
-	// 	struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
-	// 	char            *ai_canonname; // full canonical hostname
-	// 	struct addrinfo *ai_next;      // linked list, next node
-	// };
-
-
-	// struct sockaddr_storage {
-	//     sa_family_t  ss_family;     // address family
-	//     // all this is padding, implementation specific, ignore it:
-	//     char      __ss_pad1[_SS_PAD1SIZE];
-	//     int64_t   __ss_align;
-	//     char      __ss_pad2[_SS_PAD2SIZE];
-	// };
-
-
-	// struct sigaction {
-	// 	void     (*sa_handler)(int);
-	// 	void     (*sa_sigaction)(int, siginfo_t *, void *);
-	// 	sigset_t   sa_mask;
-	// 	int        sa_flags;
-	// 	void     (*sa_restorer)(void);
-	// };
 
 void ptr_print_col(char * ptr){
 	int i = 0;
@@ -255,8 +224,7 @@ void ptr_print_col(char * ptr){
 }
 
 int main(void){
-	//system("clear");
-	char buffer[BUFF_SIZE] = {0};
+	char * buffer = NULL;
 	int sockfd, new_fd; //listen on sockfd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -325,11 +293,11 @@ int main(void){
 	
 		pid_t pid = fork(); 
 		if(pid == 0){ //this is the child process
-			sleep(10);
+			//sleep(10);
 			pid_t cpid = getpid();
 			close(sockfd); //child doesn't need the listener
-			
-			sprintf(buffer, "%s %d", buffer, cpid);
+			buffer = calloc(BUFF_SIZE, sizeof(char)); //first use of buffer, fill with 0s;
+			sprintf(buffer, "%d",cpid);
 			if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
 				perror("send");
 				exit(0);
@@ -341,7 +309,7 @@ int main(void){
 					memset(buffer, 0, BUFF_SIZE);
 
 					//recieve data from client
-					if(recv(new_fd, buffer, BUFF_SIZE, 0) == -1){
+					if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){
 						PEXIT("read");
 					}
 
@@ -349,7 +317,7 @@ int main(void){
 					buffer[strcspn(buffer,"\r\n")] = 0;
 
 					//write msg to stderr
-					fprintf(stderr, "client %d: %s\n",cpid, buffer);
+					//fprintf(stderr, "client %d: %s\n",cpid, buffer);
 					//ptr_print_col(buffer);
 					//parse commands block and return value;
 					char * result = calloc(BUFF_SIZE, sizeof(char));
@@ -358,7 +326,7 @@ int main(void){
 					puts(result);
 
 					//send return msg
-					if(send(new_fd, result,BUFF_SIZE, 0) == -1){
+					if(send(new_fd, result,BUFF_SIZE-1, 0) == -1){
 						perror("send");
 						exit(0);
 					}

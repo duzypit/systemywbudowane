@@ -110,9 +110,10 @@ int main(int argc, char *argv[]){
 				if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
 					PEXIT("send");
 				}
+
 				memset(buffer, 0, BUFF_SIZE);
 
-				if((recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
+				if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
 					PEXIT("read");
 				}
 				printf("Server: %s\n", buffer);            
