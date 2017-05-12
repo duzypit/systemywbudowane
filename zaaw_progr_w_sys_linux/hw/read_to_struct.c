@@ -5,8 +5,8 @@
 #define CDELIM "="
 
 typedef struct config{
-	int *port = NULL;
-	int *max_clients = NULL;
+	int port;
+	int max_clients;
 } config;
 
 
@@ -19,12 +19,17 @@ struct config load_cfg(char * fname){
 		int i = 0;
 		while(fgets(line, sizeof(line), file) != NULL){
 			char *cfline;
+			
 			cfline = strstr((char*)line, CDELIM);
 			cfline = cfline + strlen(CDELIM);
+			cfline[strcspn(cfline,"\r\n")] = 0;
 			if (i == 0){
-				memcpy(result.port, cfline, strlen(cfline));
+				//memcpy(result.port, cfline, strlen(cfline));
+				
+				result.port = atoi(cfline);
 			} else if (i == 1){
-				memcpy(result.max_clients, cfline, strlen(cfline));
+				//memcpy(result.max_clients, cfline, strlen(cfline));
+				result.max_clients = atoi(cfline);
 			}
 			i++;
 		} // end while
@@ -42,8 +47,8 @@ int main(int argc, char **argv){
 
 	config cfg = load_cfg(argv[1]);
 
-	printf("Config:port, %d",*cfg.port);
-	printf("Config:max_clients, %d",*cfg.max_clients);
+	printf("Config.port: %d\n",cfg.port);
+	printf("Config.max_clients: %d\n",cfg.max_clients);
 
 
 	return 0;

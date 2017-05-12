@@ -17,9 +17,9 @@
 #define PCONT(str){perror(str);continue;}
 
 #define BUFF_SIZE 256
-#define PORT "3490"
-#define BACKLOG 10
+
 #define DELIM " -\t\r\n\a"
+#define CDELIM "="
 
 
 void sigchld_handler(void){
@@ -215,6 +215,39 @@ char * dispatcher(char * buffer){
     return result;	
 }
 
+typedef struct config{
+	char * port;
+	int max_clients;
+} config;
+
+
+struct config load_cfg(char * fname){
+	config result;
+	FILE * file = fopen(fname, "r");
+
+	if(file != NULL){
+		char line[BUFF_SIZE];
+		int i = 0;
+		while(fgets(line, sizeof(line), file) != NULL){
+			char *cfline;
+			
+			cfline = strstr((char*)line, CDELIM);
+			cfline = cfline + strlen(CDELIM);
+			cfline[strcspn(cfline,"\r\n")] = 0;
+			if (i == 0){
+				sprintf(result.port, "%s", cfline);
+				//memcpy(result.port, cfline, strlen(cfline));
+				//result.port = atoi(cfline);
+			} else if (i == 1){
+				result.max_clients = atoi(cfline);
+			}
+			i++;
+		} // end while
+		fclose(file);
+	} // end if(file!=NULL)
+	return result;
+}
+
 void ptr_print_col(char * ptr){
 	int i = 0;
 	while(ptr[i] != '\0'){
@@ -223,7 +256,8 @@ void ptr_print_col(char * ptr){
 	}
 }
 
-int main(void){
+int main(int argc, char **argv){
+
 	char * buffer = NULL;
 	int sockfd, new_fd; //listen on sockfd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
@@ -233,14 +267,25 @@ int main(void){
 	int yes = 1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
+	int ccount = 0; //children count, cant fork if ccount = cfg.max_clients
 
+	if (argc < 2){
+		printf("Usage: %s config_file_name\n", argv[0]);
+		exit(0);
+	}
+
+	//what if no file??
+	config cfg = load_cfg(argv[1]);
+
+	printf("Config.port: %s\n",cfg.port);
+	printf("Config.max_clients: %d\n",cfg.max_clients);
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my ip
 	
-	if((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0){ //
+	if((rv = getaddrinfo(NULL, cfg.port, &hints, &servinfo)) != 0){ //
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -269,7 +314,8 @@ int main(void){
 		exit(1);
 	}
 	
-	if (listen(sockfd, BACKLOG) == -1) {
+	//backlog = cfg max_clients
+	if (listen(sockfd, cfg.max_clients) == -1) {
 		PEXIT("listen");
 	}
 	
@@ -282,6 +328,14 @@ int main(void){
 	
 	printf("server: waitning for connections...\n");
 	while(1){ //main accept loop
+
+		while(ccount >= cfg.max_clients){ //loop to control amount of forked processes
+			int status;
+			if(wait(&status) == 0) {
+				ccount--;
+			}
+		}
+
 		sin_size = sizeof(their_addr);
 		new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
 		if (new_fd == -1) {
@@ -290,8 +344,11 @@ int main(void){
 	
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s));
 		printf("server: got connection from %s\n",s);
+
 	
 		pid_t pid = fork(); 
+		ccount++;
+
 		if(pid == 0){ //this is the child process
 			//sleep(10);
 			pid_t cpid = getpid();
