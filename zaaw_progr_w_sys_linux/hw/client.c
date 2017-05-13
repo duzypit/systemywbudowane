@@ -85,12 +85,6 @@ int main(int argc, char *argv[]){
 		buffer[strcspn(buffer,"\r\n")] = 0;
 				
 		switch((int)buffer[0]){
-            case 'q':
-            	//quit - move this section to client
-                puts("Bye!");
-                close(sockfd);	
-                exit(0);
-                break;    
             case '?':
             	//help - move this section to client
                 printf("\nCommands:\n"
@@ -110,6 +104,13 @@ int main(int argc, char *argv[]){
 				if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
 					PEXIT("send");
 				}
+				
+				//quit
+                if((int)buffer[0] == 'q'){
+                	puts("Bye!");
+                	close(sockfd);	
+                	exit(0);
+                }
 
 				memset(buffer, 0, BUFF_SIZE);
 

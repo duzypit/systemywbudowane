@@ -216,7 +216,7 @@ char * dispatcher(char * buffer){
 }
 
 typedef struct config{
-	char * port;
+	char * ptr_port;
 	int max_clients;
 } config;
 
@@ -235,9 +235,10 @@ struct config load_cfg(char * fname){
 			cfline = cfline + strlen(CDELIM);
 			cfline[strcspn(cfline,"\r\n")] = 0;
 			if (i == 0){
-				sprintf(result.port, "%s", cfline);
-				//memcpy(result.port, cfline, strlen(cfline));
-				//result.port = atoi(cfline);
+				result.ptr_port = calloc(strlen(cfline), sizeof(char));
+				sprintf(result.ptr_port, "%s", cfline);
+
+				//memcpy(result.ptr_port, cfline, strlen(cfline));
 			} else if (i == 1){
 				result.max_clients = atoi(cfline);
 			}
@@ -277,15 +278,14 @@ int main(int argc, char **argv){
 	//what if no file??
 	config cfg = load_cfg(argv[1]);
 
-	printf("Config.port: %s\n",cfg.port);
+	printf("Config.port: %s\n",cfg.ptr_port);
 	printf("Config.max_clients: %d\n",cfg.max_clients);
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my ip
-	
-	if((rv = getaddrinfo(NULL, cfg.port, &hints, &servinfo)) != 0){ //
+	if((rv = getaddrinfo(NULL, cfg.ptr_port, &hints, &servinfo)) != 0){ //
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -331,7 +331,7 @@ int main(int argc, char **argv){
 
 		while(ccount >= cfg.max_clients){ //loop to control amount of forked processes
 			int status;
-			if(wait(&status) == 0) {
+			if(wait(&status) >= 0) {
 				ccount--;
 			}
 		}
@@ -373,9 +373,12 @@ int main(int argc, char **argv){
 					//remove \r\n from msg
 					buffer[strcspn(buffer,"\r\n")] = 0;
 
-					//write msg to stderr
-					//fprintf(stderr, "client %d: %s\n",cpid, buffer);
-					//ptr_print_col(buffer);
+					//client quit
+					if ((int)buffer[0] == 'q'){
+						puts("Bye!");
+                		close(new_fd);	
+                		exit(1);
+					}
 					//parse commands block and return value;
 					char * result = calloc(BUFF_SIZE, sizeof(char));
 
@@ -386,11 +389,6 @@ int main(int argc, char **argv){
 					if(send(new_fd, result,BUFF_SIZE-1, 0) == -1){
 						perror("send");
 						exit(0);
-					}
-					
-					if(strcmp(buffer, "end") == 0){
-						puts("End detected...");
-						close(new_fd);
 					}
 				}			
 			
