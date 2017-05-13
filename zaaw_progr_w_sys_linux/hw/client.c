@@ -26,8 +26,7 @@ void * get_in_addr(struct sockaddr *sa){
 }
 
 
-int main(int argc, char *argv[]){
-	system("clear");
+int main(int argc, char **argv){
 	
 	char buffer[BUFF_SIZE] = {0};
 	int sockfd, numbytes;
@@ -36,9 +35,9 @@ int main(int argc, char *argv[]){
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 	
-	if (argc != 2) {
-		fprintf(stderr, "usage: client hostname\n");
-		exit(1);
+	if (argc < 2){
+		printf("Usage: %s host \n", argv[0]);
+		exit(0);
 	}
 	
 	memset(&hints, 0, sizeof(hints));
