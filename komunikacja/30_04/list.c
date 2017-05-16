@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <unistd.h> //sleep
+#include <time.h> //time
 #include <pthread.h>
+#include <semaphore.h>
 /*
 Treść zadania
 
@@ -32,63 +34,90 @@ typedef struct List{
 
 */
 
+//------------------------------------------------TYPEDEFS
 typedef struct List{
     int value;
     struct List * next;
 } List;
 
-void push_back(List** t);
-int pop_front(List** h);
-void show_flat(List* h);
+//------------------------------------------------GLOBALS
+List * head = NULL;
+List * tail = NULL;
+pthread_mutex_t my_mutex;
 
+//------------------------------------------------INTERFACES
+void push_back(void);
+int pop_front(void);
+void show_flat(void);
+
+void * produce(void *args);
+void consume_1();
+void consume_2();
+void consume_3();
+void * show(void *args);
+
+//------------------------------------------------MAIN
 int main(void){
     srand(time(NULL));
+        
+    pthread_t thread_produce, /*thread_consume_1, thread_consume_2, thread_consume_3, */ thread_show;
     
-    List* head = NULL;
-    int i;
-    for(i = 0; i < 10; i++){
-      push_back(&head);
-    }
+    pthread_create(&thread_produce, NULL, produce, NULL);
+    pthread_create(&thread_show, NULL, show, NULL);
 
-    show_flat(head);
+    pthread_join(thread_produce, NULL);
+    pthread_join(thread_show, NULL);
     
-    printf("\nzdejmuje val: %d\n\n", pop_front(&head));
+    //show_flat();
+    
+    //printf("\nRemove val: %d\n\n", pop_front());
 
-    show_flat(head);
+    //show_flat();
     
     return 0;
 }
 
-void push_back(List** node){
-    List* current = malloc(sizeof(List));
+//------------------------------------------------FUNCS
+void push_back(void){
+
+    List * current = NULL;
+    current  = malloc(sizeof(List));
     current -> value = rand()%1000;
-    current -> next = NULL;
-
-    if(*node == NULL){
-        *node = current;
+    current -> next = NULL;    
+         
+    
+    if(head == NULL){
+        head = current;
+        tail = current;
     } else {
-        List* tmp = *node;
-        while(tmp -> next != NULL){
-            tmp = tmp -> next; 
-        }
+        List* tmp = tail;
         tmp -> next = current;
+        tail = current;
     }
 }
 
-int pop_front(List** h){
-    List* tmp = *h;
+int pop_front(void){
 
-    if(tmp == NULL){
-        return(-1);
+    int val = 0;
+
+    if(head == NULL){
+        val = -1;
+    } else if(head == tail) {
+        val = head -> value;
+        head = NULL;
+        tail = NULL;
     } else {
-        *h = tmp -> next;
-        int val = tmp -> value;
+        List * tmp = head;
+        head = tmp -> next;
+        val = tmp -> value;
         free(tmp);
-        return val;
     }
+
+    return val;
 }
 
-void show_flat(List* current){
+void show_flat(void){
+    List * current = head;
     int i = 0;
     while(current != NULL){
         i++;
@@ -96,4 +125,30 @@ void show_flat(List* current){
         current = current -> next;
     }
     printf("\n");
+}
+
+void * produce(void *args){
+
+    while(1){
+        int i = 0;
+        for(i = 0; i < 10; i++){
+            pthread_mutex_lock(&my_mutex);
+            push_back();
+            pthread_mutex_unlock(&my_mutex);
+        }
+        sleep(5);
+    }
+
+    return NULL;
+}
+
+void * show(void *args){
+    while(1){
+        pthread_mutex_lock(&my_mutex);
+        show_flat();
+        pthread_mutex_unlock(&my_mutex);
+        sleep(7);
+    }
+
+    return NULL;
 }
