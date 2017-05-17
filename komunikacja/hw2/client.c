@@ -4,16 +4,16 @@
  */
 
 #include <stdio.h>
-//#include <sys/un.h>
-//#include <sys/types.h>
-//#include <sys/socket.h>
-//#include <unistd.h>
-//#include <stdlib.h>
-//#include <errno.h>
-//#include <string.h>
-//#include <netinet/in.h>
-//#include <arpa/inet.h>
-//#include <netdb.h>
+#include <sys/types.h> //struct addrinfo, getaddrinfo, getpid
+#include <sys/socket.h> //struct addrinfo, getaddrinfo
+#include <netdb.h> //struct addrinfo, getaddrinfo
+#include <unistd.h> //close, getpid
+#include <stdlib.h>// exit
+#include <errno.h>
+#include <string.h> //memset
+#include <netinet/in.h>//sockaddr_in6
+#include <arpa/inet.h>//inet_ntop
+
 
 /*
 Treść zadania
@@ -31,24 +31,116 @@ Zaimplementować prosty "czat" międzyprocesowy.
 
 //------------------------------------------------DEF
 #define BUFF_SIZE 512 //max number o bytes to get at once
+#define PORT "3456"
 
-//------------------------------------------------INTERFACES
 
-
+//------------------------------------------------PROTO
+void * get_in_addr(struct sockaddr *sa);
+char * get_time(void);
 //------------------------------------------------MAIN
-int main(void){
+int main(int argc, char **argv){
 	char * buffer = NULL;
-	int sockfd, numbytes, rv;
-	struct addrinfo hints, *servinfo, *p;
-	char s[INET6_ADDRSTRLEN];
 
+	int sockfd, 
+		numbytes, 
+		rv;
+	
+	struct addrinfo hints, 
+					*servinfo, 
+					*p;
+
+	char s[INET6_ADDRSTRLEN];
+	pid_t pid;
 
 	if (argc < 2){
 		printf("Usage: %s host \n", argv[0]);
 		exit(0);
 	}
 
+	memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    //int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);
+    if((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0){
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return(1);
+    }
+
+    //loop throught all the results and connect to the first we can
+    for(p = servinfo; p != NULL; p = p->ai_next){
+        if((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1){
+            PCONT("client: socket");
+        }
+
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1){
+            close(sockfd);
+            PCONT("client: connect");
+        }
+        break;
+    } // for end
+
+    if(p == NULL){
+        fprintf(stderr, "clinet: failed to connect\n");
+        return(2);
+    }
+
+    inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof(s));
+    
+    printf("client: connecting to %s\n", s);
+    
+    freeaddrinfo(servinfo); // all done with this str
+
+    if((numbytes = recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
+            PEXIT("recv");
+    }
+
+    
+	printf("Client: connection start on %s\n", buffer);
+    pid = getpid();
+    //send pid as id to server
+
+    printf("q - quit\n");
+
+    while(1){
+		printf(">: ");
+        memset(buffer, 0, BUFF_SIZE);
+        fgets(buffer, sizeof(buffer), stdin);
+        buffer[strcspn(buffer,"\r\n")] = 0;
+		if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
+     		PEXIT("send");
+        }
+
+        //quit
+        if((int)buffer[0] == 'q'){
+                puts("Bye!");
+                close(sockfd);  
+                exit(0);
+        }
+
+        memset(buffer, 0, BUFF_SIZE);
+
+        if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
+                PEXIT("read");
+        }
+
+        printf("Server: %s\n", buffer);            
+      
+    } // end while
+
+
+
+
+
 	return 0;
 }
 
 //------------------------------------------------FUNCS
+//get sockaddr, IPv4 or IPv6
+void * get_in_addr(struct sockaddr *sa){
+        if(sa->sa_family == AF_INET) {
+                return &(((struct sockaddr_in *)sa)->sin_addr);
+        }
+        return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+

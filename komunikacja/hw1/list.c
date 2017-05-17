@@ -45,7 +45,7 @@ List * head = NULL;
 List * tail = NULL;
 pthread_mutex_t my_mutex;
 
-//------------------------------------------------INTERFACES
+//------------------------------------------------PROTO
 void push_back(void);
 int pop_front(void);
 void show_flat(void);
