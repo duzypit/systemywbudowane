@@ -52,7 +52,7 @@ List * tail = NULL;
 pthread_mutex_t my_mutex;
 sem_t buff_sem;
 
-//------------------------------------------------INTERFACES
+//------------------------------------------------PROTO
 void push_back(void);
 int pop_front(void);
 void show_flat(void);
