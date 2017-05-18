@@ -1,0 +1,13 @@
+- Zaimplementować prosty "czat" międzyprocesowy.
+    1. Klient - łączy się wybranym sposobem z serwerem, przesyła mu wiadomości zawierające następujące dane:
+        1. Czas nadania wiadomości.
+        2. Identyfikator nadawcy.
+        3. Wiadomość.
+    2. Serwer - przyjmuje połączenia, wypisuje następujące informacje na standardowe wyjście albo do pliku:
+        1. Wypisuje następujące informacje na standardowe wyjście albo do pliku:
+            1. Czas nadania wiadomości.
+            2. Czas odebrania wiadomości.
+            3. Identyfikator nadawcy.
+            4. Wiadomość.
+        2. Wysyła potwierdzenie odebrania wiadomości do klienta.
+        3. Rozsyła otrzymane wiadomości do połączonych klientów. (* nadobowiązkowe)

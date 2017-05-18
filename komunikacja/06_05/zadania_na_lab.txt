@@ -1,0 +1,6 @@
+# Zadania na laboratoria
+## Komunikacja międzyprocesowa
+1. Zestawić połączenie dwukierunkowe między procesami przy użyciu potoków.
+2. Użyć mechanizmu pamięci współdzielonej do synchronizacji ustawień (struktury z jakimiś danymi) między wieloma procesami.
+3. Napisać program serwera oraz klienta, który pozwoli na komunikację między dwoma klientami poprzez serwer przy pomocy kolejki wiadomości.
+4. Zaimplementować echo serwer przy pomocy gniazd TCP.

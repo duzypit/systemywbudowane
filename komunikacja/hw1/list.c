@@ -1,9 +1,15 @@
+/*
+ * @author Tomasz Piątek
+ * @brief HW 30.04 - linked list with producer and 3 consumers
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> //sleep
 #include <time.h> //time
 #include <pthread.h>
 #include <semaphore.h>
+
 /*
 Treść zadania
 
@@ -44,29 +50,35 @@ typedef struct List{
 List * head = NULL;
 List * tail = NULL;
 pthread_mutex_t my_mutex;
+sem_t buff_sem;
 
 //------------------------------------------------INTERFACES
 void push_back(void);
 int pop_front(void);
 void show_flat(void);
 
-void * produce(void *args);
-void consume_1();
-void consume_2();
-void consume_3();
+void * producer(void *args);
+void * consumer_1(void *args);
+void * consumer_2(void *args);
+void * consumer_3(void *args);
 void * show(void *args);
 
 //------------------------------------------------MAIN
 int main(void){
     srand(time(NULL));
         
-    pthread_t thread_produce, /*thread_consume_1, thread_consume_2, thread_consume_3, */ thread_show;
-    
-    pthread_create(&thread_produce, NULL, produce, NULL);
-    pthread_create(&thread_show, NULL, show, NULL);
+    pthread_t thread_producer, thread_consumer_1, thread_consumer_2, thread_consumer_3;
+    sem_init(&buff_sem, 0, 0);
+    pthread_create(&thread_producer, NULL, producer, NULL);
+    pthread_create(&thread_consumer_1, NULL, consumer_1, NULL);
+    pthread_create(&thread_consumer_2, NULL, consumer_2, NULL);
+    pthread_create(&thread_consumer_3, NULL, consumer_3, NULL);
 
-    pthread_join(thread_produce, NULL);
-    pthread_join(thread_show, NULL);
+    pthread_join(thread_producer, NULL);
+    pthread_join(thread_consumer_1, NULL);
+    pthread_join(thread_consumer_2, NULL);
+    pthread_join(thread_consumer_3, NULL);
+    
     
     //show_flat();
     
@@ -127,14 +139,16 @@ void show_flat(void){
     printf("\n");
 }
 
-void * produce(void *args){
+void * producer(void *args){
 
     while(1){
         int i = 0;
-        for(i = 0; i < 10; i++){
+        for(i = 0; i < 30; i++){
             pthread_mutex_lock(&my_mutex);
             push_back();
+            printf("  Producer push_back\n");
             pthread_mutex_unlock(&my_mutex);
+            sem_post(&buff_sem);
         }
         sleep(5);
     }
@@ -142,12 +156,57 @@ void * produce(void *args){
     return NULL;
 }
 
+void * consumer_1(void *args){
+    int result;
+    while(1){
+        printf("* Consumer_1 sem_wait\n");
+        sem_wait(&buff_sem);
+        pthread_mutex_lock(&my_mutex);
+        result = pop_front();
+        printf("* Consumer_1 pop_front: %d\n", result);
+        pthread_mutex_unlock(&my_mutex);
+    }
+
+    return NULL;
+}
+
+
+void * consumer_2(void *args){
+    int result;
+    while(1){
+        printf("* * Consumer_2 sem_wait\n");
+        sem_wait(&buff_sem);
+        pthread_mutex_lock(&my_mutex);
+        result = pop_front();
+        printf("* * Consumer_2 pop_front: %d\n", result);
+        pthread_mutex_unlock(&my_mutex);
+    }
+
+    return NULL;
+}
+
+
+void * consumer_3(void *args){
+    int result;
+    while(1){
+        printf("* * * Consumer_3 sem_wait\n");
+        sem_wait(&buff_sem);
+        pthread_mutex_lock(&my_mutex);
+        result = pop_front();
+        printf("* * * Consumer_3 pop_front: %d\n", result);
+        pthread_mutex_unlock(&my_mutex);
+    }
+
+    return NULL;
+}
+
+/*func for debug*/
 void * show(void *args){
     while(1){
         pthread_mutex_lock(&my_mutex);
         show_flat();
         pthread_mutex_unlock(&my_mutex);
-        sleep(7);
+        sleep(5);
     }
 
     return NULL;
