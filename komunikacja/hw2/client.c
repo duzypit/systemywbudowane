@@ -4,7 +4,7 @@
  */
 
 #include <stdio.h>
-#include <sys/types.h> //struct addrinfo, getaddrinfo, getpid
+#include <sys/types.h> //struct addrinfo, getaddrinfo, getpid, watipid
 #include <sys/socket.h> //struct addrinfo, getaddrinfo
 #include <netdb.h> //struct addrinfo, getaddrinfo
 #include <unistd.h> //close, getpid
@@ -13,7 +13,8 @@
 #include <string.h> //memset
 #include <netinet/in.h>//sockaddr_in6
 #include <arpa/inet.h>//inet_ntop
-
+#include <time.h> //time & co.
+#include <signal.h> //sigaction, sigemptyset
 
 /*
 Treść zadania
@@ -33,13 +34,15 @@ Zaimplementować prosty "czat" międzyprocesowy.
 #define BUFF_SIZE 512 //max number o bytes to get at once
 #define PORT "3456"
 
-
 //------------------------------------------------PROTO
 void * get_in_addr(struct sockaddr *sa);
 char * get_time(void);
+char * format_msg(char * msg);
+
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
 	char * buffer = NULL;
+    char * fbuffer = NULL;
 
 	int sockfd, 
 		numbytes, 
@@ -50,7 +53,6 @@ int main(int argc, char **argv){
 					*p;
 
 	char s[INET6_ADDRSTRLEN];
-	pid_t pid;
 
 	if (argc < 2){
 		printf("Usage: %s host \n", argv[0]);
@@ -91,23 +93,42 @@ int main(int argc, char **argv){
     
     freeaddrinfo(servinfo); // all done with this str
 
+
+    pid_t pid = getpid();
+
+    buffer = calloc(BUFF_SIZE, sizeof(char));
+    sprintf(buffer, "%d", pid);
+    //send my id, 
+    if((send(sockfd, buffer, sizeof(buffer), 0)) == -1){
+        PEXIT("send pid");
+    }    
+
+    printf("Client id: %s\n", buffer);
+
+    //recieveack
+    buffer = calloc(BUFF_SIZE, sizeof(char));
     if((numbytes = recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
-            PEXIT("recv");
+        PEXIT("recv");
     }
 
+    printf("Server: %s\n", buffer);
     
-	printf("Client: connection start on %s\n", buffer);
-    pid = getpid();
-    //send pid as id to server
 
     printf("q - quit\n");
 
     while(1){
 		printf(">: ");
-        memset(buffer, 0, BUFF_SIZE);
+        buffer = calloc(BUFF_SIZE, sizeof(char));
+        
         fgets(buffer, sizeof(buffer), stdin);
         buffer[strcspn(buffer,"\r\n")] = 0;
-		if((send(sockfd, buffer, strlen(buffer), 0)) == -1){
+        // format msg
+
+        fbuffer = calloc(BUFF_SIZE, sizeof(char));
+        fbuffer = format_msg(buffer);
+        printf("%s\n",fbuffer);
+
+		if((send(sockfd, fbuffer, BUFF_SIZE, 0)) == -1){
      		PEXIT("send");
         }
 
@@ -116,21 +137,19 @@ int main(int argc, char **argv){
                 puts("Bye!");
                 close(sockfd);  
                 exit(0);
+        } else {
+
+            buffer = calloc(BUFF_SIZE, sizeof(char));
+
+            if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
+                    PEXIT("read");
+            }
+
+            printf("Server: %s\n", buffer);            
         }
 
-        memset(buffer, 0, BUFF_SIZE);
-
-        if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
-                PEXIT("read");
-        }
-
-        printf("Server: %s\n", buffer);            
       
     } // end while
-
-
-
-
 
 	return 0;
 }
@@ -144,3 +163,25 @@ void * get_in_addr(struct sockaddr *sa){
         return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+char * get_time(void){
+    time_t t;
+    struct tm *timeinfo;
+    char * result = calloc(80, sizeof(char));
+
+    time(&t);
+    timeinfo = localtime(&t);
+
+    strftime(result,80,"%F %H:%M:%S",timeinfo);
+
+    return(result);
+}
+
+char * format_msg(char * msg){
+    char * tmp_msg = calloc(BUFF_SIZE, sizeof(char));
+    char * t = calloc(26, sizeof(char));
+    t = get_time();
+    //t[strcspn(t,"\r\n")] = 0;
+    sprintf(tmp_msg, "%s: %s", t, msg);
+    
+    return(tmp_msg);
+}
