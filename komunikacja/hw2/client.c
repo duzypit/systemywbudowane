@@ -95,9 +95,9 @@ int main(int argc, char **argv){
 
 
     pid_t pid = getpid();
-
     buffer = calloc(BUFF_SIZE, sizeof(char));
     sprintf(buffer, "%d", pid);
+
     //send my id, 
     if((send(sockfd, buffer, sizeof(buffer), 0)) == -1){
         PEXIT("send pid");
@@ -120,7 +120,7 @@ int main(int argc, char **argv){
 		printf(">: ");
         buffer = calloc(BUFF_SIZE, sizeof(char));
         
-        fgets(buffer, sizeof(buffer), stdin);
+        fgets(buffer, BUFF_SIZE1, stdin);
         buffer[strcspn(buffer,"\r\n")] = 0;
         // format msg
 
@@ -135,7 +135,14 @@ int main(int argc, char **argv){
         //quit
         if((int)buffer[0] == 'q'){
                 puts("Bye!");
+
+                if((send(sockfd, "q", 1, 0)) == -1){
+                    PEXIT("send quit");
+                }                
+
                 close(sockfd);  
+                free(buffer);
+                free(fbuffer);
                 exit(0);
         } else {
 
@@ -170,8 +177,8 @@ char * get_time(void){
 
     time(&t);
     timeinfo = localtime(&t);
-
-    strftime(result,80,"%F %H:%M:%S",timeinfo);
+    //%F -data
+    strftime(result,80,"%H:%M:%S",timeinfo);
 
     return(result);
 }

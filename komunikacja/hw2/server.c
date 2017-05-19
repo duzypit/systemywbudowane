@@ -57,6 +57,7 @@ int main(void){
 	char s[INET6_ADDRSTRLEN];
 	int rv;
 	pid_t pid;
+	char * client_id;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
@@ -121,20 +122,21 @@ int main(void){
 
 			close(sockfd); //child doesn't need the listener
 			buffer = calloc(BUFF_SIZE, sizeof(char)); //first use of buffer, fill with 0s;
-
-			//get client id;
-				//recieve data from client
-			if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){
+				
+			if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){ //recieve data from client
 				PEXIT("id read");
 				exit(0);
 			}
 
-			printf("Client id: %s\n", buffer);
+			printf("Recieved client id: %s\n", buffer);
 
-			//zapisac id do zmiennej i uzywac jej do sygnowania wiadomosci
+			client_id = calloc(sizeof(buffer), sizeof(char)); //set client id for this process
+			memcpy(client_id, buffer, strlen(buffer));
 
-			//send ack
-			buffer = calloc(BUFF_SIZE, sizeof(char));
+
+			
+			//buffer = calloc(BUFF_SIZE, sizeof(char)); //send ack
+			buffer = NULL;
 			buffer = "Client ack";
 
 			if(send(new_fd, buffer, sizeof(buffer), 0) == -1){
@@ -143,33 +145,30 @@ int main(void){
 			}
 
 			while(1){
-				//fill buff with 0s
-				buffer = calloc(BUFF_SIZE, sizeof(char));
+				
+				buffer = calloc(BUFF_SIZE, sizeof(char)); //fill buff with 0s
 
-				//recieve data from client
-				if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){
+				
+				if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){ //recieve data from client
 					PEXIT("read");
 				}
 
-				//remove \r\n from msg
-				buffer[strcspn(buffer,"\r\n")] = 0;
+				
+				buffer[strcspn(buffer,"\r\n")] = 0; //remove \r\n from msg
 				printf("%s\n", buffer);
 
-				//client quit
-				if ((int)buffer[21] == 'q'){
-					printf("connection closed");
+				
+				if ((int)buffer[0] == 'q'){ //client quit
+					printf("Client %s connection closed\n", client_id);
+					free(buffer);
             		close(new_fd);	
             		exit(1);
-				} else {
+				} else { //send ack
+
 					buffer = calloc(BUFF_SIZE, sizeof(char));
-					buffer = "Msg ack";
-					//parse commands block and return value;
-					//char * result = calloc(BUFF_SIZE, sizeof(char));
+					buffer = "Message ack";
 
-					//esult = dispatcher(buffer);
-					//puts(result);
-
-					//send return msg
+					
 					if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
 						perror("send");
 						exit(0);
