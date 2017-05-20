@@ -1,0 +1,53 @@
+krzysztof.wilk@mobikca.com
+kszysztof.wilk.praca@gmail.com
+
+zaliczenie: programy i materiały do napisania
+slides.com/bartekektaczala/c-basics - looknij bo kody sa tam
+funktory doczytac
+co to jest ramka stosu
+
+sekcja bss aplikacji co to jest
+jesli nie ma return przez domniemanie bedzei zwrocone 0
+
+auto
+std::numeric_limits<int>::min();
+std::numeric_limits<int>::max();
+
+const expr - wyrazenie moze byc obliconen w trakcie kompilacji
+doczytać
+meta programowanie
+
+niezmiennik
+const int a = 0;
+nie moze sie zmienic;
+mozna zainicjalizowac w liscie inicjalizacyhjnej w klasie (w c++11  mozemy deklarowac w header):
+
+class c{
+	const int x = 0; //nie jest dopuszaczalne przed c++11
+}
+
+w c++ staramy sie nie uzywac #define BUFF_SIZE
+
+malloc zawsze na stercie, new nie zawsze na sterciew cpp jest operator, ktory mozna nadpisac w c jest  funkcja.
+
+smart pointery:
+unique ptr tylko jeden zasob moze trzymac tego ptr nie mozna skopiowac mozna przekazac
+shared ptr wielu wlascicieli, bedzie sprawdzal ilu jest wlascicieli i ostatni kasujac skasuje zasob
+weak ptr jeden wlasciciel, ale jak sie podzieli to ma kontrole nad zawartoscia ptr zeby uzyc trzeba go przekonwertowac na shared ptr i jest komunikacja.
+
+referencja
+1 mozna potraktowac jako alias do innego obiektu
+2 raz zainicjalizowany obiekt referencyjny nie moze byc zmieniony.
+
+int &b; // oznacza ze jest bez init i nie mozna zmienic
+
+typ string doszedł w c++ - bedzie to handler dla char * doczytac
+
+na slajdach jest opisane kopiowanie dokonczyc w domu,
+
+implict type of "" is const char*
+"text" != std::string
+
+std::string constructor w google
+
+
