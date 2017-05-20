@@ -1,0 +1,38 @@
+thread tworzenie wątków- std::thread, funkcja, funktor, metoda, anonimowa funkcja lambda
+
+identyfikator watku: std::this_thhread::get_id() wewnatrz waatku, z zewnatrz th.get_id()
+
+komunikacja z watkiem wartosc, kopia obiektu, wskaznik i referencja dostep do obiektu oryginalnego - preferowana ref
+
+
+[](){} funkcja lambda
+
+07 arg_problem - ref do i, po odłączeniu już jej nie ma
+stos sterta
+
+009 wyścig, operacja implementacji brak mutex
+010 - std::mutex
+011 - smart mutex - smart pinter RAII (przydzielanie pamieci w konstruktorze lub destruktorze), std::lock_guard znika jak wychodzimy ze scope - linia 18
+012 - unique lock, jak lg, ale mozna go samodzielnie unlockowac, ten smart mutex moze dzialac ze zmienna warunkowa
+013 - shared data std::atomic l 26 - zeby dzialal trzeba spelnic warunki jakie sa w komentarzach, klasa nie ma metod, tylko dane (op przypisania i kopiowania) i prymitywy - inty floaty itp.
+014 - future i promise - std::promise na typ jest to szablon, a tak naprawde pod spodem jest tworzony tzw. shared state - promise to wejscie do shared state wspoldzielony miedzy watkami i mozemy do niego cos zapisywac l 8, promise jest kojarzony future - otwieramy drzwi jest to wyjscie l11 stworzylismy kanal komunikacji. l14 ustawiamy wartosc, l17 pobieramy, get jest wywołaniem lockujacym, watek bedzie zablokowany do momentu pojawienia sie danych.
+015 l23 - przekazujemy promisa do nowego watku - wejscie, condition variable jesli ktos nie zapisze we future wartosci to promise jest blokniety - move przeniesienie wlasnosci, std::move
+016 - std::ref - oba watki maja dostep, get lockuje l26,
+017 - komunikacje zmieniamy ale to samo co wczesniej, join musi byc, bez join nie ma pewnosic, ktory wykona sie pierwszy, główny watek czeka na future az promise przekarze dane
+018 -  async ref, liczymy silnie
+019 - l16 jako arg referencja std::ref(), join jest nie w tym miejscu
+020 - unique lock, bardziej rozbudowany poprzedni przyklad, przekazywanie wyjscia z watku, l26 czekamy, l17 powiadamiamy prosty problem, skomplikowane rozwiazanie 
+021 - nowa wlasnosc cpp std::asynch - wrapper na watki, ma polaczony ze soba future domyslnie, mozemy zrobic get i czekamy az bedzie wartosc, jest to SZABLON -> LOOK NA VECTOR l21 get, l20 asynch, ladne roziwazanie
+022 - asynch policy AUTO - deukcja typow, polityka obslugi asynch, obsluga funkcji w nowym watku std::launch::async, std::launch::defered - ten sam watek i polityka domyslna,ktora wybieze system async swietnie dziala z future i promis
+023 - shared_future - dzielony na wiele watkow
+025 - packaged task - szavblon 2 wlasciwosi, mozna go stworzyc i wywyolac pozniej, l21, l24 uruchomienie, nie trzeba uruchamiac od razu jak watki, w tym przypadku nie bedzie wywyolany nowy watek, to jest wrapper, nie tworzy watku sam z siebie, 
+026 - pt jest potrzebny, poniewaz domyslnie ma future, mozna go przekazac do watku, watki domyslnie nie moga zwracac jest workaround po to zeby mozna bylo zwrocic wartosc z watku 
+
+z promisa otrzymujemy future, async ma future
+busy-wait - nie ma danych czekamy
+008 pr cs many - budzimy za kazdym razem rozne watki
+009 pr - budzimy tylko jeden watek
+010 spurious wakeup
+011 wyscig, 
+
+Zadanie domowe, zadanie  z lista uogolnic na wielu producentow na wielu konsumentow - uzyc zwyklego unique locka i condition variable
