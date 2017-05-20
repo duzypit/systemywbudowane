@@ -34,7 +34,7 @@ Zaimplementować prosty "czat" międzyprocesowy.
 
 //------------------------------------------------MACROS
 #define PEXIT(str) {perror(str);exit(1);}
-#define PCONT(str){perror(str);continue;}
+#define PCONT(str) {perror(str);continue;}
 
 //------------------------------------------------INTERFACES
 #define BUFF_SIZE 512 //max number o bytes to get at once
@@ -58,6 +58,9 @@ int main(void){
 	int rv;
 	pid_t pid;
 	char * client_id;
+
+	buffer = calloc(BUFF_SIZE, sizeof(char));
+    
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
@@ -121,8 +124,8 @@ int main(void){
 		if(pid == 0){ //this is the child process
 
 			close(sockfd); //child doesn't need the listener
-			buffer = calloc(BUFF_SIZE, sizeof(char)); //first use of buffer, fill with 0s;
-				
+
+			memset(buffer, 0, BUFF_SIZE);	
 			if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){ //recieve data from client
 				PEXIT("id read");
 				exit(0);
@@ -130,25 +133,20 @@ int main(void){
 
 			printf("Recieved client id: %s\n", buffer);
 
-			client_id = calloc(sizeof(buffer), sizeof(char)); //set client id for this process
+			client_id = calloc(strlen(buffer), sizeof(char)); //set client id for this process
 			memcpy(client_id, buffer, strlen(buffer));
 
-
-			
-			//buffer = calloc(BUFF_SIZE, sizeof(char)); //send ack
-			buffer = NULL;
+			memset(buffer, 0, BUFF_SIZE);
 			buffer = "Client ack";
 
-			if(send(new_fd, buffer, sizeof(buffer), 0) == -1){
+			if(send(new_fd, buffer, strlen(buffer), 0) == -1){
 				perror("id ack send");
 				exit(0);
 			}
 
 			while(1){
 				
-				buffer = calloc(BUFF_SIZE, sizeof(char)); //fill buff with 0s
-
-				
+				buffer = calloc(BUFF_SIZE, sizeof(char));
 				if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){ //recieve data from client
 					PEXIT("read");
 				}
@@ -165,11 +163,10 @@ int main(void){
             		exit(1);
 				} else { //send ack
 
-					buffer = calloc(BUFF_SIZE, sizeof(char));
-					buffer = "Message ack";
 
-					
-					if(send(new_fd, buffer,sizeof(buffer), 0) == -1){
+					memset(buffer, 0, BUFF_SIZE);
+					buffer = "Message ack";
+					if(send(new_fd, buffer,strlen(buffer), 0) == -1){
 						perror("send");
 						exit(0);
 					}
