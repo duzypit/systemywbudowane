@@ -110,8 +110,9 @@ int main(int argc, char **argv){
     printf("Client id: %s\n", buffer);
 
     //recieveack
-    buffer = calloc(BUFF_SIZE, sizeof(char));
-    if((numbytes = recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
+    //buffer = calloc(BUFF_SIZE, sizeof(char));
+    memset(buffer, 0, BUFF_SIZE);
+    if((numbytes = recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
         PEXIT("recv");
     }
 
@@ -122,15 +123,17 @@ int main(int argc, char **argv){
 
     while(1){
 		printf(">: ");
-        buffer = calloc(BUFF_SIZE, sizeof(char));
+        //buffer = calloc(BUFF_SIZE, sizeof(char));
+        memset(buffer, 0, BUFF_SIZE);
         
         fgets(buffer, BUFF_SIZE, stdin);
         buffer[strcspn(buffer,"\r\n")] = 0;
         // format msg
 
-        fbuffer = calloc(BUFF_SIZE, sizeof(char));
+        //fbuffer = calloc(BUFF_SIZE, sizeof(char));
+        memset(fbuffer, 0, BUFF_SIZE);
         fbuffer = format_msg(buffer);
-        printf("%s\n",fbuffer);
+        printf("\tYou: %s\n",fbuffer);
 
 		if((send(sockfd, fbuffer, BUFF_SIZE, 0)) == -1){
      		PEXIT("send");
@@ -140,9 +143,9 @@ int main(int argc, char **argv){
         if((int)buffer[0] == 'q'){
                 puts("Bye!");
 
-                if((send(sockfd, "q", 1, 0)) == -1){
-                    PEXIT("send quit");
-                }                
+                // if((send(sockfd, "q", 1, 0)) == -1){
+                //     PEXIT("send quit");
+                // }                
 
                 close(sockfd);  
                 free(buffer);
@@ -150,13 +153,14 @@ int main(int argc, char **argv){
                 exit(0);
         } else {
 
-            buffer = calloc(BUFF_SIZE, sizeof(char));
+            //buffer = calloc(BUFF_SIZE, sizeof(char));
+            memset(buffer, 0, BUFF_SIZE);
 
             if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
                     PEXIT("read");
             }
 
-            printf("Server: %s\n", buffer);            
+            printf("\tServer: %s\n", buffer);            
         }
 
       
@@ -177,12 +181,12 @@ void * get_in_addr(struct sockaddr *sa){
 char * get_time(void){
     time_t t;
     struct tm *timeinfo;
-    char * result = calloc(80, sizeof(char));
+    char * result = calloc(10, sizeof(char));
 
     time(&t);
     timeinfo = localtime(&t);
     //%F -data
-    strftime(result,80,"%H:%M:%S",timeinfo);
+    strftime(result,10,"%H:%M:%S",timeinfo);
 
     return(result);
 }

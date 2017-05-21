@@ -9,15 +9,13 @@
 #include <sys/socket.h> //struct addrinfo, getaddrinfo
 #include <netdb.h> //struct addrinfo, getaddrinfo
 #include <sys/wait.h> //waitpid
-// #include <sys/un.h>
+
 #include <string.h> //memset
 #include <unistd.h> //close, getpid
 #include <stdlib.h>// exit
 #include <errno.h>
 #include <arpa/inet.h>//inet_ntop
-// #include <ifaddrs.h>
-// #include <sys/ioctl.h>
-// #include <linux/if.h>
+#include <time.h>
 /*
 Treść zadania
 
@@ -44,6 +42,7 @@ Zaimplementować prosty "czat" międzyprocesowy.
 //------------------------------------------------PROTO
 void sigchld_handler(void);
 void * get_in_addr(struct sockaddr *sa);
+char * get_time(void);
 
 //------------------------------------------------MAIN
 int main(void){
@@ -107,7 +106,7 @@ int main(void){
 		PEXIT("sigaction");
 	}
 	
-	printf("server: waitning for connections...\n");
+	printf("Server: waitning for connections...\n");
 	
 	while(1){ //main accept loop
 
@@ -118,15 +117,15 @@ int main(void){
 		}
 
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof(s));
-		printf("server: got connection from %s\n",s);
+		printf("Server: got connection from %s on %s\n",s,get_time());
 		
 		pid = fork();
 		if(pid == 0){ //this is the child process
 
 			close(sockfd); //child doesn't need the listener
-
+			
 			memset(buffer, 0, BUFF_SIZE);	
-			if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){ //recieve data from client
+			if(recv(new_fd, buffer, BUFF_SIZE, 0) == -1){ //recieve data from client
 				PEXIT("id read");
 				exit(0);
 			}
@@ -146,26 +145,25 @@ int main(void){
 
 			while(1){
 				
-				buffer = calloc(BUFF_SIZE, sizeof(char));
-				if(recv(new_fd, buffer, BUFF_SIZE-1, 0) == -1){ //recieve data from client
+				buffer = calloc(BUFF_SIZE, sizeof(char));	
+				if(recv(new_fd, buffer, BUFF_SIZE, 0) == -1){ //recieve data from client
 					PEXIT("read");
 				}
 
-				
+								
 				buffer[strcspn(buffer,"\r\n")] = 0; //remove \r\n from msg
-				printf("%s\n", buffer);
+				printf("\tClient:%s, recieved:%s, send:%s\n", client_id, get_time(), buffer);
 
 				
-				if ((int)buffer[0] == 'q'){ //client quit
-					printf("Client %s connection closed\n", client_id);
+				if ((strlen(buffer) == 11) && (int)buffer[10] == 'q'){ //client quit
+					printf("Client %s: connection closed %s\n", client_id, get_time());
 					free(buffer);
             		close(new_fd);	
             		exit(1);
 				} else { //send ack
-
-
 					memset(buffer, 0, BUFF_SIZE);
 					buffer = "Message ack";
+
 					if(send(new_fd, buffer,strlen(buffer), 0) == -1){
 						perror("send");
 						exit(0);
@@ -195,4 +193,17 @@ void * get_in_addr(struct sockaddr *sa){
 		return &(((struct sockaddr_in *)sa)->sin_addr);
 	}
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+char * get_time(void){
+    time_t t;
+    struct tm *timeinfo;
+    char * result = calloc(10, sizeof(char));
+
+    time(&t);
+    timeinfo = localtime(&t);
+    //%F -data
+    strftime(result,10,"%H:%M:%S",timeinfo);
+
+    return(result);
 }
