@@ -1,0 +1,27 @@
+1 enumy cpp11 enum class,  mozna wybrac ryp
+enum class MyWnum : char { value = 'c';} można typu bool uzyc,l wtedy tylko 
+
+2. tablice, staly rozmiar w stylu c, rozmiar to musi być zmienna znana w czasie kompilacji
+tylko bool ma zdefiniowany rozmiar 1 bajt, bitu nie da si zaadresować.
+constexpr - oznacza ze funkcja bedzie wywołana w czasie kompilacji, zwraca wynik w runtime
+
+constexpt int foo(){return 5;}
+...
+int arr[foo()];
+
+Problem z tablicami, rozmiar,
+
+Obczaj szablony
+Obczaj vector
+flaga kompilatora -o2
+typedefy 
+order of evaluation
+
+konwersja typów
+niejawna konwersja, do jawnej operatory castowania np. static cast foo(static_cast<int>(z)) - dla typów wbudowanych
+undefined behavior - wolna reka kompilatora ;) nie wiemy co sie stani
+range for - taki foreach, iterator, const auto& - jesli nie chodzi o modyfikowanie wartosci i auto& jeśli o to chodzi
+
+
+funkcje - structural programming - sekwencyjne
+funkcje usprawniaja czytelnosc programu
