@@ -28,7 +28,7 @@ Zaimplementować prosty "czat" międzyprocesowy.
 
 //------------------------------------------------MACROS
 #define PEXIT(str) {perror(str);exit(1);}
-#define PCONT(str){perror(str);continue;}
+#define PCONT(str) {perror(str);continue;}
 
 //------------------------------------------------DEF
 #define BUFF_SIZE 512 //max number o bytes to get at once
@@ -43,6 +43,9 @@ char * format_msg(char * msg);
 int main(int argc, char **argv){
 	char * buffer = NULL;
     char * fbuffer = NULL;
+    //init
+    buffer = calloc(BUFF_SIZE, sizeof(char));
+    fbuffer = calloc(BUFF_SIZE, sizeof(char));
 
 	int sockfd, 
 		numbytes, 
@@ -95,7 +98,8 @@ int main(int argc, char **argv){
 
 
     pid_t pid = getpid();
-    buffer = calloc(BUFF_SIZE, sizeof(char));
+    //buffer = calloc(BUFF_SIZE, sizeof(char));
+    memset(buffer, 0, BUFF_SIZE);
     sprintf(buffer, "%d", pid);
 
     //send my id, 
@@ -120,7 +124,7 @@ int main(int argc, char **argv){
 		printf(">: ");
         buffer = calloc(BUFF_SIZE, sizeof(char));
         
-        fgets(buffer, BUFF_SIZE1, stdin);
+        fgets(buffer, BUFF_SIZE, stdin);
         buffer[strcspn(buffer,"\r\n")] = 0;
         // format msg
 
