@@ -37,7 +37,7 @@ Zaimplementować prosty "czat" międzyprocesowy.
 //------------------------------------------------PROTO
 void * get_in_addr(struct sockaddr *sa);
 char * get_time(void);
-char * format_msg(char * msg);
+char * format_msg(const char * msg);
 
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
@@ -45,7 +45,6 @@ int main(int argc, char **argv){
     char * fbuffer = NULL;
     //init
     buffer = calloc(BUFF_SIZE, sizeof(char));
-    fbuffer = calloc(BUFF_SIZE, sizeof(char));
 
 	int sockfd, 
 		numbytes, 
@@ -98,7 +97,6 @@ int main(int argc, char **argv){
 
 
     pid_t pid = getpid();
-    //buffer = calloc(BUFF_SIZE, sizeof(char));
     memset(buffer, 0, BUFF_SIZE);
     sprintf(buffer, "%d", pid);
 
@@ -110,28 +108,23 @@ int main(int argc, char **argv){
     printf("Client id: %s\n", buffer);
 
     //recieveack
-    //buffer = calloc(BUFF_SIZE, sizeof(char));
     memset(buffer, 0, BUFF_SIZE);
     if((numbytes = recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
         PEXIT("recv");
     }
-
     printf("Server: %s\n", buffer);
-    
-
     printf("q - quit\n");
 
+    //fbuffer = calloc(BUFF_SIZE, sizeof(char));
     while(1){
 		printf(">: ");
-        //buffer = calloc(BUFF_SIZE, sizeof(char));
-        memset(buffer, 0, BUFF_SIZE);
-        
+
+        memset(buffer, 0, BUFF_SIZE);        
         fgets(buffer, BUFF_SIZE, stdin);
         buffer[strcspn(buffer,"\r\n")] = 0;
-        // format msg
 
-        //fbuffer = calloc(BUFF_SIZE, sizeof(char));
-        memset(fbuffer, 0, BUFF_SIZE);
+        //memset(fbuffer, 0, BUFF_SIZE);
+        fbuffer = NULL;
         fbuffer = format_msg(buffer);
         printf("\tYou: %s\n",fbuffer);
 
@@ -141,25 +134,16 @@ int main(int argc, char **argv){
 
         //quit
         if((int)buffer[0] == 'q'){
-                puts("Bye!");
-
-                // if((send(sockfd, "q", 1, 0)) == -1){
-                //     PEXIT("send quit");
-                // }                
-
-                close(sockfd);  
-                free(buffer);
-                free(fbuffer);
-                exit(0);
+            free(buffer);
+            free(fbuffer);
+            close(sockfd);  
+            puts("Bye!");
+            exit(0);
         } else {
-
-            //buffer = calloc(BUFF_SIZE, sizeof(char));
             memset(buffer, 0, BUFF_SIZE);
-
             if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
                     PEXIT("read");
             }
-
             printf("\tServer: %s\n", buffer);            
         }
 
@@ -191,12 +175,12 @@ char * get_time(void){
     return(result);
 }
 
-char * format_msg(char * msg){
+char * format_msg(const char * msg){
     char * tmp_msg = calloc(BUFF_SIZE, sizeof(char));
     char * t = calloc(26, sizeof(char));
     t = get_time();
-    //t[strcspn(t,"\r\n")] = 0;
+
     sprintf(tmp_msg, "%s: %s", t, msg);
-    
+    free(t);
     return(tmp_msg);
 }
