@@ -37,7 +37,7 @@ Zaimplementować prosty "czat" międzyprocesowy.
 //------------------------------------------------PROTO
 void * get_in_addr(struct sockaddr *sa);
 char * get_time(void);
-char * format_msg(const char * msg);
+char * format_msg(char * msg);
 
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
@@ -124,16 +124,17 @@ int main(int argc, char **argv){
         buffer[strcspn(buffer,"\r\n")] = 0;
 
         //memset(fbuffer, 0, BUFF_SIZE);
-        fbuffer = NULL;
-        fbuffer = format_msg(buffer);
-        printf("\tYou: %s\n",fbuffer);
+        //fbuffer = NULL;
+        //fbuffer = 
+        buffer = format_msg(buffer);
+        printf("\tYou: %s\n",buffer);
 
-		if((send(sockfd, fbuffer, BUFF_SIZE, 0)) == -1){
+		if((send(sockfd, buffer, BUFF_SIZE, 0)) == -1){
      		PEXIT("send");
         }
 
         //quit
-        if((int)buffer[0] == 'q'){
+        if((int)buffer[10] == 'q'){
             free(buffer);
             free(fbuffer);
             close(sockfd);  
@@ -171,16 +172,36 @@ char * get_time(void){
     timeinfo = localtime(&t);
     //%F -data
     strftime(result,10,"%H:%M:%S",timeinfo);
-
+    //free(timeinfo);
     return(result);
 }
 
-char * format_msg(const char * msg){
-    char * tmp_msg = calloc(BUFF_SIZE, sizeof(char));
+char * format_msg(char * msg){
+    char * tmp_msg = calloc(strlen(msg)+1, sizeof(char));
+    memcpy(tmp_msg, msg, strlen(msg));
+
+    memset(msg, 0, BUFF_SIZE);
+    char * t = calloc(8, sizeof(char));
+    t = get_time();
+    
+    sprintf(msg, "%s: %s", t, tmp_msg);
+    
+    free(t);
+    free(tmp_msg);
+    
+    return(msg);
+}
+/*
+char * format_msg_old(char * msg){
+    //char * tmp_msg = msg;
+    //calloc(BUFF_SIZE, sizeof(char));
+    memset(msg, 0, BUFF_SIZE);
     char * t = calloc(26, sizeof(char));
     t = get_time();
 
-    sprintf(tmp_msg, "%s: %s", t, msg);
+    sprintf(msg, "%s: %s", t, tmp_msg);
     free(t);
+    free(tmp_msg);
     return(tmp_msg);
 }
+*/
