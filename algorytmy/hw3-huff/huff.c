@@ -18,12 +18,6 @@
 #define PEXIT(str) {perror(str);exit(1);}
 
 //------------------------------------------------DEF
-typedef struct huff_list{
-	char symbol;
-    int amount;
-    struct huff_list * next;
-} huff_list;
-
 typedef struct huff_node {
         int frequency;
         char symbol;
@@ -32,12 +26,24 @@ typedef struct huff_node {
         struct huff_node *right;
 } huff_node;
 
+typedef struct huff_list{
+	//char symbol;
+    //int amount;
+    huff_node* node;
+    struct huff_list * next;
+} huff_list;
 
 //------------------------------------------------GLOBALS
 huff_list* head = NULL;
 huff_node* root = NULL;
+char depth[2056]; //print_tree, pop_format_tree, push_format_tree
+int di; //print_tree, pop_format_tree, push_format_tree
+
 //------------------------------------------------PROTO
 void usage(const char* argv);
+void push_format_tree (char c);
+void pop_format_tree(void);
+void print_tree(huff_node* node);
 char* load_file(const char* filename);
 void count_symbol(char symbol);
 void print_huff_list(void);
@@ -58,13 +64,24 @@ int main(int argc, char **argv){
 			count_symbol(text[i]);
 		}
 
-		print_huff_list();
+		//print_huff_list();
 		bubble_sort_list();
 		print_huff_list();
+		printf("============================\n\n");
+		while(head != NULL){
+			//print_huff_list();
+			plant_huff_tree();
+		
+		}
+
+		print_tree(root);
+
 
 	}
 
 	free(text);
+	free(head);
+	free(root);
 	return 0;
 }
 //------------------------------------------------FUNCS
@@ -74,12 +91,49 @@ void usage(const char* file){
 		exit(0);
 }
 
+void push_format_tree (char c){
+	depth[di++] = ' ';
+	depth[di++] = c;
+	depth[di++] = ' ';
+	depth[di++] = ' ';
+	depth[di] = 0;
+}
+
+void pop_format_tree(void){
+	depth[di-=4] = 0;
+}
+
+void print_tree(huff_node* node){
+	if((int)node->symbol == 10){
+		printf("(10):%d\n", node->frequency);
+	} else if(node->symbol == '*'){ 
+		printf("(\033[22;31m%c:%d\033[0m)\n", node->symbol,node->frequency);
+	}else {
+		printf("%c:%d\n", node->symbol,node->frequency);
+	}
+
+    if(node->right){
+            printf("%s ├───", depth);
+            push_format_tree('|');
+            print_tree(node->right);
+            pop_format_tree();
+    }
+
+	if(node->left){
+		printf("%s └───", depth);
+		push_format_tree(' ');
+		print_tree(node->left);
+		pop_format_tree();
+	}
+}
+
 char* load_file(const char* fn){
 	char* data = NULL;
 	FILE *f;
 	size_t sz;
 
 	f = fopen(fn, "rb");
+
 	if(!f){
 		PEXIT("File does not exist");
 	}
@@ -105,8 +159,12 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 	if(head == NULL){
 		huff_list* current = NULL;
 	    current  = malloc(sizeof(huff_list));
-	    current -> symbol = symbol;
-	    current -> amount = 1;
+	    current -> node = malloc(sizeof(huff_node));
+	    current -> node -> symbol = symbol;
+	    current -> node -> frequency = 1;
+	    current -> node -> valid = 1;
+	    current -> node -> left = NULL;
+	    current -> node -> right = NULL;
 	    current -> next = NULL;  		
 	    head = current;
 	    //free(current);
@@ -117,10 +175,10 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
     	int found = 0;
 
     	while(current != NULL){
-    		if(current -> symbol == symbol){
+    		if(current -> node -> symbol == symbol){
     			//symbol exists
     			found = 1;
-    			current -> amount = current -> amount + 1;
+    			current -> node -> frequency = current -> node -> frequency + 1;
     			break;
     		}
     		current = current -> next;
@@ -128,13 +186,19 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 
 		if(found == 0){
 			//symbol doesnt exist
-			huff_list* new = NULL;
-			//next = head;
-			new = malloc(sizeof(huff_list));
-			new -> symbol = symbol;
-			new -> amount = 1;
-			new -> next = head;
-			head = new;
+			huff_list* current = NULL;
+		    current  = malloc(sizeof(huff_list));
+		    current -> node = malloc(sizeof(huff_node));
+		    current -> node -> symbol = symbol;
+		    current -> node -> frequency = 1;
+		    current -> node -> valid = 1;
+		    current -> node -> left = NULL;
+		    current -> node -> right = NULL;
+		    current -> next = NULL;  		
+			current -> next = head;
+			head = current;
+
+
 			//free(new);
 		}
 
@@ -146,15 +210,15 @@ void print_huff_list(void){ //debug
 	huff_list* current = NULL;
 	current = head;
 	while(current != NULL){
-		printf("%d:: %c, %d\n",i, current -> symbol, current->amount);
+		printf("%d:: %c, %d\n",i, current -> node -> symbol, current -> node -> frequency);
 		current = current -> next;
 		i++;
 	}
-	printf("Total: %d elements\n", i);
+	//printf("Total: %d elements\n\n", i-1);
 }
 
 
-void bubble_sort_list(void){ //sort huff_list from smallest amount
+void bubble_sort_list(void){ //sort huff_list from smallest freq
 	
 	huff_list* previous = NULL;
 	huff_list* current = NULL;
@@ -172,22 +236,32 @@ void bubble_sort_list(void){ //sort huff_list from smallest amount
 		swap_count = 0;
 		while(next != NULL){
 
-			if(current -> amount > next -> amount){ //swap
-				printf("Curent: %c, next %c\n", current->symbol, next->symbol);
+			if(current -> node -> frequency > next -> node -> frequency){ //swap
+				//printf("Bubble: curent: %c, next %c\n", current -> node -> symbol, next -> node -> symbol);
 				tmp = NULL;
-				previous -> next = next;
+				if(previous != NULL){
+					//hotswap ;)
+					previous -> next = next;
+				}
+
 				tmp = current;
 				current = next;
-				
+			
 				next = tmp;
 				next -> next = current -> next;
 				current -> next = next;
 
-				if(previous -> next == head){ //head guard
+				if(previous != NULL && previous -> next == head){ //head guard
 					head = previous;
 				}
 
-				printf("Swapped: %c (%d) - %c (%d)\n",current->symbol,(int)current->symbol,current->next->symbol, (int)current->next->symbol);
+				if(next == head) {
+					head = current;
+				}
+
+
+
+				//printf("Swapped: %c - %c\n",current -> node -> symbol,current ->next-> node -> symbol);
 				swap_count++;
 			}
 			previous = current;
@@ -209,69 +283,55 @@ huff_list* pop_front(void){
 }
 
 void plant_huff_tree(void){
-	//if root = null
-	if(root == NULL){
+	//empty list
+	if(head == NULL){
+		printf("No nodes to plant a TREE!\n");
+	}
+
+	//only one element on list
+	if(head -> next == NULL){
+		root = head -> node;
+		head = NULL;
+		//free(head);
+	} else {
+		//pop 2 elements from list
 		huff_list* first = pop_front();
 		huff_list* second = pop_front();
+		
+		// combine & create new node from first & second
+		huff_list* parent = NULL;
+	    parent  = malloc(sizeof(huff_list));
+	    parent -> node = malloc(sizeof(huff_node));
+	    parent -> node -> symbol = '*';
+	    parent -> node -> frequency = first -> node -> frequency + second -> node -> frequency;
+	    parent -> node -> valid = 0;
+	    
+	    //maloc & memcopy
+	    parent -> node -> left = malloc(sizeof(huff_node));;
+	    parent -> node -> right = malloc(sizeof(huff_node));;
 
-		huff_node* tree_head = malloc(sizeof(huff_node));
-        tree_head -> frequency = first -> amount + second -> amount;
-        tree_head -> symbol = '-';
-        tree_head -> valid = 0;
-        tree_head -> left = NULL;
-        tree_head -> right = NULL;
+	    if(first -> node -> frequency > second -> node -> frequency){
+	    	memcpy(parent -> node -> left, first -> node, sizeof(huff_node));
+	    	memcpy(parent -> node -> right, second -> node, sizeof(huff_node));
+	    } else {
+	    	memcpy(parent -> node -> right, first -> node, sizeof(huff_node));
+	    	memcpy(parent -> node -> left, second -> node, sizeof(huff_node));
+	    }
 
-		huff_node* left = malloc(sizeof(huff_node));
-        left -> frequency = first -> amount;
-        left -> symbol = first -> symbol;
-        left -> valid = 1;
-        left -> left = NULL;
-        left -> right = NULL;
+	    // free unused huff_list*
+	    //free(first);
+	    //free(second);
 
-		huff_node* right = malloc(sizeof(huff_node));
-        right -> frequency = first -> amount;
-        right -> symbol = first -> symbol;
-        right -> valid = 1;
-        right -> left = NULL;
-        right -> right = NULL;
+		//push front new element
 
-        root = tree_head;
-        if(left -> frequency < right -> frequency){
+	    parent -> next = NULL;  		
+		parent -> next = head;
+		head = parent;
 
-        	root -> left = left;
-        	root -> right = right;
-        } else {
-        	root -> left = right;
-        	root -> right = left;
-        }
-
-	} else { //add first element of list to tree;
-		huff_list* tmp = pop_front();
-
-		huff_node* new_root = malloc(sizeof(huff_node));
-        new_root -> frequency = (tmp -> amount + root -> frequency);
-        new_root -> symbol = '-';
-        new_root -> valid = 0;
-        new_root -> left = NULL;
-        new_root -> right = NULL;		
-
-        huff_node* new_node = malloc(sizeof(huff_node));
-        new_node -> frequency = tmp -> amount;
-        new_node -> symbol = tmp -> symbol;
-        new_node -> valid = 1;
-        new_node -> left = NULL;
-        new_node -> right = NULL;
-
-        if(new_node -> frequency < root -> frequency){
-
-        	new_root -> left = new_node;
-        	new_root -> right = root;
-        } else {
-        	new_root -> left = root;
-        	new_root -> right = new_node;
-        }
-
-        root = new_root;
+		//sort list
+		//printf("\t push front Head -> node -> frequency: %d\n", head->node->frequency);
+	    bubble_sort_list();
+		//repeat until no elements on list
 	} //end else
 
 }
