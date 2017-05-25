@@ -25,12 +25,12 @@ typedef struct huff_node {
         struct huff_node *right;
 } huff_node;
 
-typedef struct huff_list{
+typedef struct huff_list {
     huff_node* node;
     struct huff_list * next;
 } huff_list;
 
-typedf struct entry{
+typedef struct entry {
 	int frequency;
 	char symbol;
 	char* code;
@@ -44,9 +44,11 @@ static const char RIGHT = '1';
 //------------------------------------------------GLOBALS
 huff_list* head = NULL;
 huff_node* root = NULL;
-entry* dictionary = NULL;
+
+entry* dictionary_head = NULL;
 
 int size_of_coded_msg;
+
 char depth[2056]; //print_tree, pop_format_tree, push_format_tree
 int di; //print_tree, pop_format_tree, push_format_tree
 
@@ -88,6 +90,9 @@ int main(int argc, char **argv){
 
 		print_tree(root);
 		gen_huff_code(root, "-", 1, LEFT);
+
+		printf("Loaded file size (bits): %lu\n", strlen(text)*8);
+		printf("Size of mem to alloc for coded msg (bits): %d\n", size_of_coded_msg);
 
 
 	}
@@ -362,19 +367,28 @@ void gen_huff_code(huff_node* current, char* parent_code, int level, char side){
 	if(current != NULL){
 		current -> code = malloc(level * sizeof(char));
 		
-		if(current != root){	
-			sprintf(current->code,"%s%c",parent_code, side);
-		} else {
-			current -> code = "0";
-		}
+		if(current != root && current -> symbol != '*' && current-> valid == 1){	
+			//create new dictionary entry, add it as head entry on list
+			entry* tmp_dict_entry = NULL;
+			tmp_dict_entry = malloc(sizeof(entry));
+			tmp_dict_entry -> frequency = current -> frequency;
+			tmp_dict_entry -> symbol = current -> symbol;
+			tmp_dict_entry -> code = malloc(level * sizeof(char));
+			sprintf(tmp_dict_entry->code,"%s%c",parent_code, side);
+			tmp_dict_entry -> next = dictionary_head;
+			dictionary_head = tmp_dict_entry;
+
+			//enlarge output buffer
+			size_of_coded_msg += level * tmp_dict_entry -> frequency; 
+		} 
 		
-		if(current -> symbol != '*' && current-> valid == 1){
-			if((int)current->symbol == 10){
-				printf("(10): %5d: %10s\n",current->frequency, current -> code);
-			} else{
-				printf("%4c: %5d: %10s\n", current->symbol, current->frequency, current -> code);
-			}
-		}
+		//if(current -> symbol != '*' && current-> valid == 1){
+			// if((int)current->symbol == 10){
+			// 	printf("(10): %5d: %10s\n",current->frequency, current -> code);
+			// } else{
+			// 	printf("%4c: %5d: %10s\n", current->symbol, current->frequency, current -> code);
+			// }
+		//}
 
 		if(current->left != NULL){
 			gen_huff_code(current->left, current->code, level+1, LEFT);
@@ -386,3 +400,31 @@ void gen_huff_code(huff_node* current, char* parent_code, int level, char side){
 	}
 
 }
+
+// void gen_huff_code(huff_node* current, char* parent_code, int level, char side){
+
+// 	if(current != NULL){
+// 		current -> code = malloc(level * sizeof(char));
+		
+// 		if(current != root){	
+// 			sprintf(current->code,"%s%c",parent_code, side);
+// 		} else {
+// 			current -> code = "0";
+// 		}
+		
+// 		if(current -> symbol != '*' && current-> valid == 1){
+// 			if((int)current->symbol == 10){
+// 				printf("(10): %5d: %10s\n",current->frequency, current -> code);
+// 			} else{
+// 				printf("%4c: %5d: %10s\n", current->symbol, current->frequency, current -> code);
+// 			}
+// 		}
+
+// 		if(current->left != NULL){
+// 			gen_huff_code(current->left, current->code, level+1, LEFT);
+// 		}
+
+// 		if(current->right != NULL){
+// 			gen_huff_code(current->right, current->code, level+1, RIGHT);
+// 		}
+// 	}
