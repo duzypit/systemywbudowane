@@ -14,28 +14,39 @@
 #include <stdlib.h> //exit
 #include <string.h> //strlen
 
-//------------------------------------------------MACROS
-#define PEXIT(str) {perror(str);exit(1);}
-
+//------------------------------------------------MACRO
 //------------------------------------------------DEF
 typedef struct huff_node {
         int frequency;
         char symbol;
         int valid;
+        char* code; 
         struct huff_node *left;
         struct huff_node *right;
 } huff_node;
 
 typedef struct huff_list{
-	//char symbol;
-    //int amount;
     huff_node* node;
     struct huff_list * next;
 } huff_list;
 
+typedf struct entry{
+	int frequency;
+	char symbol;
+	char* code;
+	struct entry* next;
+} entry;
+
+//static const...
+static const char LEFT = '0';
+static const char RIGHT = '1';
+
 //------------------------------------------------GLOBALS
 huff_list* head = NULL;
 huff_node* root = NULL;
+entry* dictionary = NULL;
+
+int size_of_coded_msg;
 char depth[2056]; //print_tree, pop_format_tree, push_format_tree
 int di; //print_tree, pop_format_tree, push_format_tree
 
@@ -50,6 +61,7 @@ void print_huff_list(void);
 void bubble_sort_list(void);
 void plant_huff_tree(void);
 huff_list* pop_front(void);
+void gen_huff_code(huff_node* tree, char* parent_code, int level, char side);
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
 	
@@ -67,7 +79,7 @@ int main(int argc, char **argv){
 		//print_huff_list();
 		bubble_sort_list();
 		print_huff_list();
-		printf("============================\n\n");
+		printf("\n============================\n\n");
 		while(head != NULL){
 			//print_huff_list();
 			plant_huff_tree();
@@ -75,6 +87,7 @@ int main(int argc, char **argv){
 		}
 
 		print_tree(root);
+		gen_huff_code(root, "-", 1, LEFT);
 
 
 	}
@@ -135,7 +148,8 @@ char* load_file(const char* fn){
 	f = fopen(fn, "rb");
 
 	if(!f){
-		PEXIT("File does not exist");
+		puts("File does not exist");
+		exit(1);
 	}
 
 	fseek(f, 0, SEEK_END);
@@ -145,7 +159,8 @@ char* load_file(const char* fn){
 	data = (char*) malloc(sz);
 	if(data == NULL){
 		fclose(f);
-		PEXIT("Can't malloc for file");
+		puts("Can't malloc for file");
+		exit(1);
 	}
 
 	fread(data, 1, sz, f);
@@ -163,6 +178,7 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 	    current -> node -> symbol = symbol;
 	    current -> node -> frequency = 1;
 	    current -> node -> valid = 1;
+	    current -> node -> code = NULL;
 	    current -> node -> left = NULL;
 	    current -> node -> right = NULL;
 	    current -> next = NULL;  		
@@ -192,6 +208,7 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 		    current -> node -> symbol = symbol;
 		    current -> node -> frequency = 1;
 		    current -> node -> valid = 1;
+		    current -> node -> code = NULL;
 		    current -> node -> left = NULL;
 		    current -> node -> right = NULL;
 		    current -> next = NULL;  		
@@ -210,7 +227,11 @@ void print_huff_list(void){ //debug
 	huff_list* current = NULL;
 	current = head;
 	while(current != NULL){
-		printf("%d:: %c, %d\n",i, current -> node -> symbol, current -> node -> frequency);
+		if((int)current -> node -> symbol == 10){
+			printf("%d:: (10), %d\n",i, current -> node -> frequency);
+		} else {
+			printf("%d:: %c, %d\n",i, current -> node -> symbol, current -> node -> frequency);
+		}
 		current = current -> next;
 		i++;
 	}
@@ -305,7 +326,7 @@ void plant_huff_tree(void){
 	    parent -> node -> symbol = '*';
 	    parent -> node -> frequency = first -> node -> frequency + second -> node -> frequency;
 	    parent -> node -> valid = 0;
-	    
+	    parent -> node -> code = NULL;
 	    //maloc & memcopy
 	    parent -> node -> left = malloc(sizeof(huff_node));;
 	    parent -> node -> right = malloc(sizeof(huff_node));;
@@ -333,5 +354,35 @@ void plant_huff_tree(void){
 	    bubble_sort_list();
 		//repeat until no elements on list
 	} //end else
+
+}
+
+void gen_huff_code(huff_node* current, char* parent_code, int level, char side){
+
+	if(current != NULL){
+		current -> code = malloc(level * sizeof(char));
+		
+		if(current != root){	
+			sprintf(current->code,"%s%c",parent_code, side);
+		} else {
+			current -> code = "0";
+		}
+		
+		if(current -> symbol != '*' && current-> valid == 1){
+			if((int)current->symbol == 10){
+				printf("(10): %5d: %10s\n",current->frequency, current -> code);
+			} else{
+				printf("%4c: %5d: %10s\n", current->symbol, current->frequency, current -> code);
+			}
+		}
+
+		if(current->left != NULL){
+			gen_huff_code(current->left, current->code, level+1, LEFT);
+		}
+
+		if(current->right != NULL){
+			gen_huff_code(current->right, current->code, level+1, RIGHT);
+		}
+	}
 
 }
