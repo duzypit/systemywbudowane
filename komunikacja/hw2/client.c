@@ -39,6 +39,7 @@ void * get_in_addr(struct sockaddr *sa);
 char * get_time(void);
 char * format_msg(char * msg);
 
+
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
 	char * buffer = NULL;
@@ -181,7 +182,7 @@ char * format_msg(char * msg){
     memcpy(tmp_msg, msg, strlen(msg));
 
     memset(msg, 0, BUFF_SIZE);
-    char * t = calloc(8, sizeof(char));
+    char * t = NULL;
     t = get_time();
     
     sprintf(msg, "%s: %s", t, tmp_msg);
