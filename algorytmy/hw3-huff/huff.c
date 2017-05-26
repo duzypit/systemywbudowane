@@ -5,8 +5,8 @@
 
 /*
 	load input
+	gen tree
 	gen dictionary
-	save to file
 	encode input 
 	print encoded data
  */
@@ -64,13 +64,12 @@ void count_symbol(char symbol);
 void print_huff_list(void); //utility
 void bubble_sort_list(void);
 void plant_huff_tree(void);
-huff_list* pop_front(void);
+huff_node* pop_front(void);
 void gen_huff_code(huff_node* tree, char* parent_code, int level, char side);
 void print_dictionary_list(void); //utility
 char* find_code(char symbol);
 void destroy_dictionary_list(void);
-int destroy_huff_tree(huff_node* tree);
-int destroy_huff_list(huff_list* element);
+void destroy_huff_tree(huff_node* tree);
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
 	char* text = NULL; // data to process
@@ -85,9 +84,9 @@ int main(int argc, char **argv){
 		}
 
 		bubble_sort_list();
-		printf("Frequency list\n");
-		print_huff_list();
-		printf("\nHuffman tree\n\n");
+		// printf("Frequency list\n");
+		// print_huff_list();
+		printf("Huffman tree\n\n");
 		while(head != NULL){
 			plant_huff_tree();
 		
@@ -107,24 +106,31 @@ int main(int argc, char **argv){
 
 		i = 0;
 		while(text[i] != '\0'){
-			char* code = NULL;
-			code = find_code(text[i]);
-			strcat(encoded_text,code);
-			free(code);
-			i++;
+		 	char* code = NULL;
+		 	code = find_code(text[i]);
+		 	strcat(encoded_text,code);
+		 	free(code);
+		 	i++;
 		}
 
 		printf("\nText: %s", text);
 		printf("Encoded text: %s\n",encoded_text);
 
 	}
-	destroy_huff_tree(root);
-	destroy_dictionary_list();
-	//destroy_huff_list(head);
-	free(text);
+	//first destroy dictionary of codes stored in entry*
+	destroy_dictionary_list(); // last created first destroyed
+
+	//destroy tree & root
+ 	destroy_huff_tree(root);
+	free(head);
+
+	
+	free(text); //load_file malloc
+	free(encoded_text);
 	return 0;
 }
 //------------------------------------------------FUNCS
+
 void usage(const char* file){
 		printf("Simple Huffman tree generator\n");
 		printf("Usage: %s file_to_encode \n", file);
@@ -196,6 +202,8 @@ char* load_file(const char* fn){
 	return(data);
 }
 
+
+
 void count_symbol(char symbol){ // increment counter for symbol on list, if symbol doesnt exist add as a head
 	//head == NULL
 	if(head == NULL){
@@ -210,7 +218,6 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 	    current -> node -> right = NULL;
 	    current -> next = NULL;  		
 	    head = current;
-	    //free(current);
     } else {
 		//find symbol
     	huff_list* current = NULL;
@@ -241,8 +248,6 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 		    current -> next = NULL;  		
 			current -> next = head;
 			head = current;
-
-			//free(new);
 		}
 
 	}
@@ -261,7 +266,6 @@ void print_huff_list(void){ //debug
 		current = current -> next;
 		i++;
 	}
-	//printf("Total: %d elements\n\n", i-1);
 }
 
 
@@ -284,7 +288,6 @@ void bubble_sort_list(void){ //sort huff_list from smallest freq
 		while(next != NULL){
 
 			if(current -> node -> frequency > next -> node -> frequency){ //swap
-				//printf("Bubble: curent: %c, next %c\n", current -> node -> symbol, next -> node -> symbol);
 				tmp = NULL;
 				if(previous != NULL){
 					//hotswap ;)
@@ -293,7 +296,6 @@ void bubble_sort_list(void){ //sort huff_list from smallest freq
 
 				tmp = current;
 				current = next;
-			
 				next = tmp;
 				next -> next = current -> next;
 				current -> next = next;
@@ -306,11 +308,9 @@ void bubble_sort_list(void){ //sort huff_list from smallest freq
 					head = current;
 				}
 
-
-
-				//printf("Swapped: %c - %c\n",current -> node -> symbol,current ->next-> node -> symbol);
 				swap_count++;
 			}
+
 			previous = current;
 			current = current -> next;
 			next = current-> next;
@@ -319,11 +319,14 @@ void bubble_sort_list(void){ //sort huff_list from smallest freq
 	}
 }
 
-huff_list* pop_front(void){
+huff_node* pop_front(void){
 	if(head != NULL){
 		huff_list* result = head;
 		head = result->next;
-		return(result);
+		huff_node* node = NULL;
+		node = result-> node;
+		free(result);
+		return(node);
 	} else {
 		return NULL;
 	}
@@ -337,31 +340,34 @@ void plant_huff_tree(void){
 
 	//only one element on list
 	if(head -> next == NULL){
+		//one element on list means
 		root = head -> node;
-		head = NULL;
-		//free(head);
+		free(head);
+		head = NULL; //loop end condition
 	} else {
 		//pop 2 elements from list
-		huff_list* first = pop_front();
-		huff_list* second = pop_front();
+		huff_node* first = NULL;
+		first = pop_front();
+		huff_node* second = NULL;
+		second = pop_front();
 		
 		// combine & create new node from first & second
 		huff_list* parent = NULL;
 	    parent  = malloc(sizeof(huff_list));
 	    parent -> node = malloc(sizeof(huff_node));
 	    parent -> node -> symbol = '*';
-	    parent -> node -> frequency = first -> node -> frequency + second -> node -> frequency;
+	    parent -> node -> frequency = first -> frequency + second -> frequency;
 	    parent -> node -> valid = 0;
 	    parent -> node -> code = NULL;
 	    parent -> node -> left = NULL;
 	    parent -> node -> right = NULL;
 	    
-	    if(first -> node -> frequency > second -> node -> frequency){
-	    	parent -> node -> left = first -> node;
-	    	parent -> node -> right = second -> node;
+	    if(first -> frequency > second -> frequency){
+	    	parent -> node -> left = first;
+	    	parent -> node -> right = second;
 	    } else {
-	    	parent -> node -> left = second -> node;
-	    	parent -> node -> right = first -> node;
+	    	parent -> node -> left = second;
+	    	parent -> node -> right = first;
 	    }
 
 		//push front new element
@@ -375,16 +381,16 @@ void plant_huff_tree(void){
 }
 
 void gen_huff_code(huff_node* current, char* parent_code, int level, char side){
-
+	//START WITH GLOBAL ROOT
 	if(current != NULL){
 		current -> code = malloc(level+1 * sizeof(char));
 
-		if(current != root){	
-			sprintf(current->code,"%s%c",parent_code, side);
-		} else {
-			//current == root;
-			current -> code = "0";
-		}		
+		if(current == root){
+			sprintf(current->code,"%s","0");
+		}	else {
+			sprintf(current->code,"%s%c",parent_code, side); //its not root of tree
+		}
+
 		
 		if(current != root && current -> symbol != '*' && current-> valid == 1){	
 			//create new dictionary entry, add it as head entry on list
@@ -425,7 +431,6 @@ void print_dictionary_list(void){ //utility
 		current = current -> next;
 		i++;
 	}
-	//printf("Total: %d elements\n\n", i-1);
 }
 
 char* find_code(char symbol){
@@ -450,47 +455,21 @@ void destroy_dictionary_list(void){
 		entry* current = NULL;
 		current = dictionary_head;
 		dictionary_head = current->next;
-		printf("Dictionary list: ");
-		//free(current->code);
+
+		free(current->code);
 		free(current);
 	}
 
-	//free(dictionary_head);
 }
 
-int destroy_huff_tree(huff_node* tree){
-	huff_node* current = NULL;
-	current = tree;
-
-	if(current == NULL){
-		return 1;
-	}
-		
-	destroy_huff_tree(current->left);
-	destroy_huff_tree(current->right);
-
-	if(current->code != NULL ){
-		printf("Symbol: %c,current->code: a:%p, v:%s\n",current->symbol, current->code, current->code);
-		free(current->code);
-	}
+void destroy_huff_tree(huff_node* current){
 	
-	free(current);
+	if(current != NULL){
 		
-	return 0;
-
-}
-
-int destroy_huff_list(huff_list* element){
-	huff_list* current = NULL;
-	current = element;
-	if(current == NULL){
-		return 1;
+		destroy_huff_tree(current->left);
+		destroy_huff_tree(current->right);
+		free(current->code);
+		free(current);
+		
 	}
-	destroy_huff_list(current->next);
-	if(current->node != NULL){
-		free(current->node);
-	}
-	free(current);
-	return 0;
-
 }
