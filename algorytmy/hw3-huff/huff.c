@@ -54,8 +54,6 @@ int size_of_coded_msg;
 char depth[2056]; //print_tree, pop_format_tree, push_format_tree
 int di; //print_tree, pop_format_tree, push_format_tree
 
-int malloc_count;
-int free_count;
 //------------------------------------------------PROTO
 void usage(const char* argv);
 void push_format_tree (char c); //utility
@@ -75,8 +73,6 @@ int destroy_huff_tree(huff_node* tree);
 int destroy_huff_list(huff_list* element);
 //------------------------------------------------MAIN
 int main(int argc, char **argv){
-	free_count= 0;
-	malloc_count = 0;
 	char* text = NULL; // data to process
 	int i = 0; //for var iterator
 
@@ -122,13 +118,10 @@ int main(int argc, char **argv){
 		printf("Encoded text: %s\n",encoded_text);
 
 	}
+	destroy_huff_tree(root);
 	destroy_dictionary_list();
-	print_dictionary_list();
-	
-	//destroy_huff_tree(root);
-	destroy_huff_list(head);
+	//destroy_huff_list(head);
 	free(text);
-	printf("m: %d, f: %d\n",malloc_count, free_count);
 	return 0;
 }
 //------------------------------------------------FUNCS
@@ -217,7 +210,6 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 	    current -> node -> right = NULL;
 	    current -> next = NULL;  		
 	    head = current;
-	    malloc_count +=2;
 	    //free(current);
     } else {
 		//find symbol
@@ -250,7 +242,6 @@ void count_symbol(char symbol){ // increment counter for symbol on list, if symb
 			current -> next = head;
 			head = current;
 
-			malloc_count+=2;
 			//free(new);
 		}
 
@@ -391,6 +382,7 @@ void gen_huff_code(huff_node* current, char* parent_code, int level, char side){
 		if(current != root){	
 			sprintf(current->code,"%s%c",parent_code, side);
 		} else {
+			//current == root;
 			current -> code = "0";
 		}		
 		
@@ -459,7 +451,7 @@ void destroy_dictionary_list(void){
 		current = dictionary_head;
 		dictionary_head = current->next;
 		printf("Dictionary list: ");
-		free(current->code);
+		//free(current->code);
 		free(current);
 	}
 
@@ -479,9 +471,9 @@ int destroy_huff_tree(huff_node* tree){
 
 	if(current->code != NULL ){
 		printf("Symbol: %c,current->code: a:%p, v:%s\n",current->symbol, current->code, current->code);
-//		free(current->code);
+		free(current->code);
 	}
-
+	
 	free(current);
 		
 	return 0;
@@ -499,7 +491,6 @@ int destroy_huff_list(huff_list* element){
 		free(current->node);
 	}
 	free(current);
-	free_count+=2;
 	return 0;
 
 }
