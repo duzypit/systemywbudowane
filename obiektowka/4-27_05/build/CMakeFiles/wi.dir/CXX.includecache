@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/meq/systemywbudowane/obiektowka/4-27_05/function.cpp
+iostream
+-
+
+/home/meq/systemywbudowane/obiektowka/4-27_05/main.cpp
+iostream
+-
+
