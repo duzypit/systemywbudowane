@@ -1,1 +1,0 @@
-/usr/bin/c++       CMakeFiles/wi.dir/main.cpp.o CMakeFiles/wi.dir/function.cpp.o  -o wi -rdynamic 
