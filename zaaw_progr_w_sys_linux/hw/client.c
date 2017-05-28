@@ -1,4 +1,7 @@
-//http://man7.org/linux/man-pages/man7/unix.7.html#EXAMPLE
+/*
+ * @author Tomasz Piątek
+ * @brief socet connection - client
+ */
 #include <stdio.h>
 #include <sys/un.h>
 #include <sys/types.h>
@@ -11,21 +14,20 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+//------------------------------------------------MACRO
 #define PEXIT(str) {perror(str);exit(1);}
 #define PCONT(str){perror(str);continue;}
 
+//------------------------------------------------DEF
 #define PORT "3490"
 #define BUFF_SIZE 256 //max number o bytes to get at once
 
-//get sockaddr, IPv4 or IPv6
-void * get_in_addr(struct sockaddr *sa){
-	if(sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in *)sa)->sin_addr);
-	}
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
+//------------------------------------------------GLOBALS
 
+//------------------------------------------------PROTO
+void * get_in_addr(struct sockaddr *sa);
 
+//------------------------------------------------MAIN
 int main(int argc, char **argv){
 	
 	char buffer[BUFF_SIZE] = {0};
@@ -71,7 +73,7 @@ int main(int argc, char **argv){
 	printf("client: connecting to %s\n", s);
 	freeaddrinfo(servinfo); // all done with this str
 	
-	if((numbytes = recv(sockfd, buffer, BUFF_SIZE-1, 0)) == -1){
+	if((numbytes = recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
 		PEXIT("recv");
 	}
 	
@@ -90,13 +92,12 @@ int main(int argc, char **argv){
                     "q - exit\n"
                     "l - list ifs\n\n"
                     "i <if_name> x - select if and then execute x command\n\n"
-                    "i <if_name> s - show if status\n"
-                    "i <if_name> h - show if hwaddr\n"
-                    "i <if_name> 4 - show if IPv$ addr : netmask\n\n"
-                    "i <if_name> a <addr> - change addr\n"
-                    "i <if_name> m <hwaddr> - change mac\n"
-                    "i <if_name> u - set selected if up\n"
-                    "i <if_name> d - set selected if down\n"
+                    "x may be:\n"
+                    "s - show if status\n"
+                    "h - show if hwaddr\n"
+                    "4 - show if IPv$ addr : netmask\n\n"
+                    "a <ip_v4_addr>  - change addr\n"
+
                     );
                 break;
             default:
@@ -106,7 +107,7 @@ int main(int argc, char **argv){
 				
 				//quit
                 if((int)buffer[0] == 'q'){
-                	puts("Bye!");
+                	puts("\tBye!");
                 	close(sockfd);	
                 	exit(0);
                 }
@@ -116,10 +117,19 @@ int main(int argc, char **argv){
 				if((recv(sockfd, buffer, BUFF_SIZE, 0)) == -1){
 					PEXIT("read");
 				}
-				printf("Server: %s\n", buffer);            
+				printf("\tServer: %s\n", buffer);            
 		}
 	}	
 	
 
 	return 0;
+}
+
+//------------------------------------------------FUNCS
+//get sockaddr, IPv4 or IPv6
+void * get_in_addr(struct sockaddr *sa){
+	if(sa->sa_family == AF_INET) {
+		return &(((struct sockaddr_in *)sa)->sin_addr);
+	}
+	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
