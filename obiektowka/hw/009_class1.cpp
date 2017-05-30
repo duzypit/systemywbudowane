@@ -5,7 +5,9 @@
 #include <iostream>
 
 struct MyType {
-    MyType(const MyType& t); 
+	MyType() = default;
+	//cpy ctor
+    MyType(const MyType&) = default;
 };
 
 int main() {
