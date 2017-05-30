@@ -5,14 +5,15 @@
 #include <iostream>
 
 struct MyType {
-    MyType( const MyType& rhs); 
-    MyType( MyType& rhs);
+	MyType() {};
+    MyType(const MyType& rhs); 
+    MyType(MyType&& rhs);
 };
 
-MyType getType() { return MyType{};}
+MyType getType() { return(MyType a);}
 
 int main() {
     MyType b; 
     MyType a {b};
-    MyType c { getType(); }
+    MyType c (getType());
 }
