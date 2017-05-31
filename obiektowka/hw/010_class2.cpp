@@ -6,14 +6,15 @@
 
 struct MyType {
 	MyType() {};
-    MyType(const MyType& rhs); 
-    MyType(MyType&& rhs);
+    MyType(const MyType& rhs) {}; 
+    MyType(MyType& rhs) {};
 };
 
-MyType getType() { return(MyType a);}
+MyType getType() { return MyType{};}
 
 int main() {
     MyType b; 
     MyType a {b};
-    MyType c (getType());
+    MyType c {getType()};
+    std::cout << "compiled ;)" << std::endl;
 }
