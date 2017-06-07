@@ -4,18 +4,20 @@
  */
 
 /*
-	load input
-	count occurences
-	print dominant
- */
+gen input
+count occurences
+print domi
+*/
+
 #include <iostream>
 #include <array>
 #include <iterator>
 #include <random>
 #include <algorithm>
 #include <map>
+
 /*
-fill array with random numbers
+andom numbers generator
 */
 template<class Iter>
 void fill_random( Iter start, Iter end, int min, int max)
@@ -25,7 +27,11 @@ void fill_random( Iter start, Iter end, int min, int max)
 
     std::uniform_int_distribution<int> dist(min, max);
 
-    std::generate(start, end, [&] () { return dist(mte); });
+    std::generate(start, end, 
+    	[&] () { 
+    		return dist(mte); 
+    	}
+    );
 }
 
 /*
@@ -34,34 +40,48 @@ overloaded << op for array
 template<std::size_t N>
 std:: ostream& operator<<(std::ostream& os, const std::array<int, N>&arr){
 	os << "[";
+	int last = arr.size();
+	int pos = 0;
 	for(auto r: arr) { 
-		os << r << " ";
-
+		pos++;
+		os << r;
+		if (pos != last) os << ", ";
 	}
 	os << "]";
 	return os;
 }
 
+/*
+tmplated function printing map -- debug
+*/
 template<typename Map>
 void print_map(Map& m){
 	std::cout << '{';
+	int last = m.size();
+	int pos = 0;	
 	for(auto& p: m){
-		std::cout<< p.first << ':' << p.second << ' ';
+		pos++;
+		std::cout<< p.first << ':' << p.second; 
+		if (pos != last) std::cout << ", ";
 	}
 	std::cout << "}\n";
 }
 
+
 int main(){
+	//gen input
+	std::array<int, 600> input;
+	fill_random(input.begin(), input.end(), 0, 256);
 
-	std::array<int, 300> input_array;
-	fill_random(input_array.begin(), input_array.end(), 0, 256);
+	//debug - show values
+	std::cout << "Random array values: " << std::endl; 
+	std::cout << input << "\n\n";
 
-	std::cout << "Random array values: " << input_array << std::endl;
 
-	std::cout << "Mapped values: " << std::endl;
+	//map input by keys
 	std::map<int, int> map_values;
 
-	for(auto& v: input_array){
+	for(auto& v: input){
 		if(map_values.find(v) != map_values.end()){
 			map_values.at(v) +=1;
 		} else{
@@ -69,30 +89,30 @@ int main(){
 		}
 	}
 
+	//debug show mapped values
+	std::cout << "Mapped values: " << std::endl;
 	print_map(map_values);
 
-//'dump' the map to a vector: vector<pair<K,V>> v(m.begin(), m.end());
+	//cpy values to vector pairs
+	std::vector<std::pair<int, int>> v(map_values.begin(), map_values.end());
 
+	//sort vector 
+	std::sort(v.begin(), v.end(), 
+		[](const std::pair<int, int > &a, const std::pair<int, int > &b) { 
+			return b.second < a.second;
+		}
+	);
 
+	//show domi
+	std::pair<int, int> biggest = v.front();
+	std::cout << "Dominant: quantity" << std::endl;
+	for ( const auto &p : v ) {
+		if(biggest.second == p.second){
+			std::cout << p.first << " : " << p.second << std::endl;
+		}
+	}
 
-// std::sort(object.begin(), object.end(), pred());
-
-// where, pred() is a function object defining the order on objects of myclass. Alternatively, you can define myclass::operator<.
-
-// For example, you can pass a lambda:
-
-// std::sort(object.begin(), object.end(),
-//           [] (myclass const& a, myclass const& b) { return a.v < b.v; });
-
-// Or if you're stuck with C++03, the function object approach (v is the member on which you want to sort):
-
-// struct pred {
-//     bool operator()(myclass const & a, myclass const & b) const {
-//         return a.v < b.v;
-//     }
-// };
-
-
+    std::cout << std::endl;
 
 	return 0;
 }
