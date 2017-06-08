@@ -15,7 +15,7 @@ print domi
 #include <random>
 #include <algorithm>
 #include <map>
-#include "dominant_class.hpp"
+
 
 /*
 andom numbers generator
@@ -71,52 +71,50 @@ void print_map(Map& m){
 
 
 int main(){
-	// //gen input
-	// std::array<int, 600> input;
-	// fill_random(input.begin(), input.end(), 0, 256);
+	//gen input
+	std::array<int, 600> input;
+	fill_random(input.begin(), input.end(), 0, 256);
 
-	// //debug - show values
-	// std::cout << "Random array values: " << std::endl; 
-	// std::cout << input << "\n\n";
+	//debug - show values
+	std::cout << "Random array values: " << std::endl; 
+	std::cout << input << "\n\n";
 
 
-	// //map input by keys
-	// std::map<int, int> map_values;
+	//map input by keys
+	std::map<int, int> map_values;
 
-	// for(auto& v: input){
-	// 	if(map_values.find(v) != map_values.end()){
-	// 		map_values.at(v) +=1;
-	// 	} else{
-	// 		map_values[v] = 1;
-	// 	}
-	// }
+	for(auto& v: input){
+		if(map_values.find(v) != map_values.end()){
+			map_values.at(v) +=1;
+		} else{
+			map_values[v] = 1;
+		}
+	}
 
-	// //debug show mapped values
-	// std::cout << "Mapped values: " << std::endl;
-	// print_map(map_values);
+	//debug show mapped values
+	std::cout << "Mapped values: " << std::endl;
+	print_map(map_values);
 
-	// //cpy values to vector pairs
-	// std::vector<std::pair<int, int>> v(map_values.begin(), map_values.end());
+	//cpy values to vector pairs
+	std::vector<std::pair<int, int>> v(map_values.begin(), map_values.end());
 
-	// //sort vector 
-	// std::sort(v.begin(), v.end(), 
-	// 	[](const std::pair<int, int > &a, const std::pair<int, int > &b) { 
-	// 		return b.second < a.second;
-	// 	}
-	// );
+	//sort vector 
+	std::sort(v.begin(), v.end(), 
+		[](const std::pair<int, int > &a, const std::pair<int, int > &b) { 
+			return b.second < a.second;
+		}
+	);
 
-	// //show domi
-	// std::pair<int, int> biggest = v.front();
-	// std::cout << "Dominant: quantity" << std::endl;
-	// for ( const auto &p : v ) {
-	// 	if(biggest.second == p.second){
-	// 		std::cout << p.first << " : " << p.second << std::endl;
-	// 	}
-	// }
+	//show domi
+	std::pair<int, int> biggest = v.front();
+	std::cout << "Dominant: quantity" << std::endl;
+	for ( const auto &p : v ) {
+		if(biggest.second == p.second){
+			std::cout << p.first << " : " << p.second << std::endl;
+		}
+	}
 
- //    std::cout << std::endl;
+    std::cout << std::endl;
 
-	Dominant domi;
-	domi.print_input().print_map_values().print_result();
 	return 0;
 }
