@@ -1,6 +1,6 @@
 /*
  * @author Tomasz Piątek
- * @brief Class 7-points Write a class to handle a file with all constructors, destructor, operators... (C++11 recommended)
+** @brief Class 7-points Write a class to handle a file with all constructors, destructor, operators... (C++11 recommended)
  */
 #include <iostream>
 #include <fstream>
@@ -12,8 +12,9 @@ class File {
 public:
 	//File(){}
 
-	File(std::string filename = "/tmp/aa") : myfile(filename, std::ios_base::app){
+	File(std::string fname = "/tmp/aa") : myfile(fname, std::ios_base::app){
 		//default ctor
+		this->filename = fname;
 		std::cout << "default ctor" << std::endl;
 	};
 
@@ -23,20 +24,12 @@ public:
 
 	}
 
-	File(File&& rhs)/* : myfile(std::move(rhs))*/{
-		//mv ctor
-		std::cout << "mv ctor" << std::endl;
-	}
-
 	File& operator=(const File& rhs){
 		//copy assign op
 		std::cout << "cpy assign op" << std::endl;
-		return *this;
-	}
+		if(this != &rhs){
 
-	File& operator=(File&& rhs){
-		//mv assign op
-		std::cout << "mv assign op" << std::endl;
+		}
 		return *this;
 	}
 
@@ -46,19 +39,19 @@ public:
 		std::cout << "Dstr: file closed" << std::endl;
 	}
 
-private:
 	std::ifstream myfile;
+	std::string filename;
 
 };
 
 int main() {
     File f {"/tmp/aa"}; 
 
-    File f2 { f } ; 
+    //File f2 { f } ; 
 
-    File f3 = f2; 
+    //File f3 = f2; 
 
     File f4; 
 	
-    f = f3; 
+    //f = f3; 
 }
