@@ -130,7 +130,7 @@ private:
 
 int main(){
 
-	Dominant domi;
+	Dominant domi {1000, 0, 100};
 	domi.print_input().print_map_values().print_result();
 	return 0;
 }
