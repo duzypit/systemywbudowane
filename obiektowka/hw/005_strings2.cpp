@@ -22,9 +22,11 @@ int main(){
 
 void rev_c_style(void){
 
-	const char* source = "Rägnarock Mötorhead";
+	// const char* source = "Rägnarock Mötorhead";
+	const char* source = "łódż";
+
 	int length = strlen(source) ;
-	
+	std::cout << "length -c: " << length << std::endl;
 	char* dest = NULL;
 	dest = (char*)malloc(length * sizeof(char));
 	strcpy(dest, source);
@@ -38,12 +40,13 @@ void rev_c_style(void){
         dest[j] = c;
     }
 
-    std::cout << "Source: " << source << " dest (std::reverse): " << dest << std::endl;
+    std::cout << "Source: " << source << " dest: " << dest << std::endl;
 
 }
 
 void rev_cpp_style(void){
-	std::string source("Rägnarock Mötorhead");
+	std::string source("łódź");
+	std::cout << "Length: " << source.length() << " size: " << source.size() << std::endl;
 	std::string dest(source);
 	std::reverse(dest.begin(), dest.end());
 
