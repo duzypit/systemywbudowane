@@ -8,6 +8,8 @@
 #include <cstring>
 #include <string>
 #include <algorithm>
+#include <codecvt>
+#include <locale>
 
 void rev_c_style(void);
 void rev_cpp_style(void);
@@ -45,11 +47,13 @@ void rev_c_style(void){
 }
 
 void rev_cpp_style(void){
-	std::string source("łódź");
-	std::cout << "Length: " << source.length() << " size: " << source.size() << std::endl;
-	std::string dest(source);
+	std::string source("Rägnarock Mötorhead");
+
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
+	std::wstring dest = L"Rägnarock Mötorhead";
+
 	std::reverse(dest.begin(), dest.end());
 
-	std::cout << "Source: " << source << " dest (std::reverse): " << dest << std::endl;
+	std::cout << "Source: " << source << " dest (std::reverse + utf8_conv): " << utf8_conv.to_bytes(dest) << std::endl;
 
 }
