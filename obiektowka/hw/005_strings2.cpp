@@ -48,7 +48,7 @@ void rev_c_style(void){
 
 void rev_cpp_style(void){
 	std::string source("Rägnarock Mötorhead");
-
+//stolen from @rikonek
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
 	std::wstring dest = L"Rägnarock Mötorhead";
 
