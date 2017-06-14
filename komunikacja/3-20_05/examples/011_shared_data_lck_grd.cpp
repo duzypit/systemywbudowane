@@ -1,23 +1,25 @@
-#include <iostream>
-#include <thread>
-#include <vector>
-#include <mutex>
+//011 - smart mutex - smart pointer, RAII (przydzielanie pamieci w konstruktorze lub 
+//destruktorze), std::lock_guard znika jak wychodzimy ze scope - linia 18
+#include <iostream> //std::cout
+#include <thread> //std::thread
+#include <vector> //std::vector
+#include <mutex> //std::mutex, std::lock_guard
 
 class Wallet {
 public:
 	Wallet() : m_money(0) {}
+
+
+//m_myMutex is member of class Wallet, which is what is used to protect m_money. lock(m_myMutex) simply engages 
+//the lock and the exit from the block causes its destruction, dis-engaging the lock. guard 
+//is just a convenient way to engage and dis-engage the lock.
 	void addMoney(int val) {
-		std::lock_guard<std::mutex> lk(m_myMutex);
+		std::lock_guard<std::mutex> lock(m_myMutex);
 			for(int i = 0 ; i < val; i++)
 				m_money++;
 	}
 
-	void removeMoney(int val) { 
-		std::lock_guard<std::mutex> lk(m_myMutex);
-			m_money -= val; 
-	}
-
-	int checkMoney() { std::cout << m_money << std::endl; }
+	void checkMoney() { std::cout << m_money << std::endl; }
 
 private:
 	int m_money;

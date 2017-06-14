@@ -1,3 +1,5 @@
+//013 - shared data std::atomic l 26 - zeby dzialal trzeba spelnic warunki jakie sa w 
+//komentarzach, klasa nie ma metod, tylko dane (op przypisania i kopiowania) i prymitywy - inty floaty itp.
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -6,7 +8,7 @@
 //c++14 standard:
 //Specializations and instantiations of the atomic template shall have a deleted copy constructor, a deleted
 //copy assignment operator, and a constexpr value constructor.
-//shortly => primities, POD
+//shortly => primities, POD (plain old data)
 
 class Wallet {
 public:
@@ -20,7 +22,7 @@ public:
 		m_money -= val; 
 	}
 
-	int checkMoney() { std::cout << m_money << std::endl; }
+	void checkMoney() { std::cout << m_money << std::endl; }
 
 private:
 	std::atomic<int> m_money;

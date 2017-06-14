@@ -1,3 +1,6 @@
+//015 l23 - przekazujemy promisa do nowego watku - wejscie, condition variable jesli 
+//ktos nie zapisze we future wartosci to promise jest blokniety - move przeniesienie 
+//wlasnosci, std::move
 #include <iostream>
 #include <string>
 #include <future>

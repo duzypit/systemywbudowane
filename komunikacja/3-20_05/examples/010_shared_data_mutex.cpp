@@ -1,3 +1,4 @@
+//010 - std::mutex
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -19,7 +20,7 @@ public:
 		m_myMutex.unlock();
 	}
 
-	int checkMoney() { std::cout << m_money << std::endl; }
+	void checkMoney() { std::cout << m_money << std::endl; }
 
 private:
 	int m_money;
@@ -31,6 +32,7 @@ void checkThreads()
 	Wallet myWallet;
 	std::vector<std::thread> thVec;
 	for(int i = 0 ; i < 5 ; i++) {
+		//std::thread(funkcja, obiekt, arg funkcji)
 		thVec.push_back(std::thread(&Wallet::addMoney, &myWallet, 10000));
 	}
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <thread>
+#include <thread> //std::thread
 #include <unistd.h>
 
 void fun()
@@ -11,7 +11,8 @@ void fun()
 int main()
 {
 	std::cout << "Main thread\n";
-	std::thread th{fun}; //uniform initialization
+	//Thread Class to represent individual threads of execution.
+	std::thread th{fun}; //uniform initialization removing the distinction between initialization of aggregate + non-aggregate classes, arrays, STL/custom collection classes, and PODs.
 	//std::thread th(fun);
 	
 	std::cout << "Main thread before join\n";

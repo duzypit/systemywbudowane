@@ -1,3 +1,4 @@
+//016 - std::ref - oba watki maja dostep, get lockuje l26,
 #include <iostream>
 #include <string>
 #include <future>
@@ -20,6 +21,8 @@ int main()
 	std::future<std::string> ftr = prms.get_future();
 
 	//share the input(promise) with new thread
+	// You should think of using std::ref when a function takes a template parameter by value, such as std::bind.
+	// std::ref is a value type that behaves like a reference.
 	std::thread th(&thFun, std::ref(prms));
 
 	//get output (future)

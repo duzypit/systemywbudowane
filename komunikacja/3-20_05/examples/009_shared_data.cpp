@@ -11,7 +11,7 @@ public:
 	}
 
 	void removeMoney(int val) { m_money -= val; };
-	int checkMoney() { std::cout << m_money << std::endl; }
+	void checkMoney() { std::cout << m_money << std::endl;}
 
 private:
 	int m_money;

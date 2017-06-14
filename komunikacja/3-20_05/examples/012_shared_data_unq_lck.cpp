@@ -1,3 +1,5 @@
+//012 - unique lock, jak lock_guard, ale mozna go samodzielnie unlockowac, 
+//ten smart mutex moze dzialac ze zmienna warunkowa
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -13,13 +15,7 @@ public:
 		//lk.unlock(); //mozna zrobic
 	}
 
-	void removeMoney(int val) { 
-		std::unique_lock<std::mutex> lk(m_myMutex);
-			m_money -= val; 
-		//lk.unlock(); //mozna zrobic
-	}
-
-	int checkMoney() { std::cout << m_money << std::endl; }
+	void checkMoney() { std::cout << m_money << std::endl; }
 
 private:
 	int m_money;

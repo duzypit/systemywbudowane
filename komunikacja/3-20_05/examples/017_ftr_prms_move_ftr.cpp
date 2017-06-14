@@ -1,3 +1,5 @@
+//017 - komunikacje zmieniamy ale to samo co wczesniej, join musi byc, bez 
+//join nie ma pewnosic, ktory wykona sie pierwszy, główny watek czeka na future az promise przekarze dane
 #include <iostream>
 #include <string>
 #include <future>
