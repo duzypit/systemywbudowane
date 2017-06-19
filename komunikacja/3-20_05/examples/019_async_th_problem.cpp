@@ -1,3 +1,4 @@
+//019 - liczymy silnię l16 jako arg referencja std::ref(), join jest nie w tym miejscu
 #include <iostream>
 #include <thread>
 

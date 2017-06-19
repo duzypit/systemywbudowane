@@ -1,3 +1,6 @@
+//022 - asynch policy AUTO - deukcja typow, polityka obslugi asynch, obsluga funkcji w nowym watku 
+//std::launch::async, std::launch::defered - ten sam watek i polityka domyslna,ktora wybieze system 
+//async swietnie dziala z future i promise
 #include <iostream>
 #include <thread>
 #include <future>

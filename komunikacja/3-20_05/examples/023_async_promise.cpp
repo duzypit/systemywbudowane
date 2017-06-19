@@ -1,3 +1,4 @@
+//023 - shared_future - dzielony na wiele watkow
 #include <iostream>
 #include <thread>
 #include <future>
@@ -8,6 +9,10 @@ int factorial(std::future<int>&& f)
 	int res = 1;
 	
 	std::cout << "New thread : waiting for a future to be ready..." << std::endl;	
+
+	//Returns the value stored in the shared state (or throws its exception) when the shared state is ready.
+	//If the shared state is not yet ready (i.e., the provider has not yet set its value or exception), 
+	//the function blocks the calling thread and waits until it is ready.
 	int N = f.get();
 	std::cout << "New thread : future received" << std::endl; 
 
@@ -21,7 +26,11 @@ int factorial(std::future<int>&& f)
 int main()
 {
 	int result = 0;
+	//A promise is an object that can store a value of type T to be retrieved by a future object (possibly in another 
+	//thread), offering a synchronization point.
 
+	//On construction, promise objects are associated to a new shared state on which they can store either 
+	//a value of type T or an exception derived from std::exception.
 	std::promise<int> p;
 	std::future<int> f = p.get_future();
 
