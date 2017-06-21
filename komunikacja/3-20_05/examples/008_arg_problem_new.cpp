@@ -16,7 +16,7 @@ void createThread()
 {
 	int* i = new int();
 	std::thread th(fun, i);
-	std::cout<<"i (przed delete, po podaniut do fun) = " << *i << std::endl;
+	std::cout<<"i (przed delete, po wysłaniu do fun) = " << *i << std::endl;
 	delete i;
 	th.detach();
 }
