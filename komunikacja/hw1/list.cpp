@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <random>
+#include <chrono>
+#include <thread>
 
 /*
 Treść zadania
@@ -38,7 +40,6 @@ typedef struct List{
 
 //------------------------------------------------TYPEDEFS
 
-
 struct Node {
 public:
 
@@ -70,16 +71,18 @@ private:
 
 class List {
 public:
-    List() : mt(rd()), dist(1.0, 100.0) {
+    List() : mt(rd()), dist(1, 128) {
         
         head = nullptr;
         tail = nullptr;
     }
 
     int pop_front() {
-        int ret_val = -1; //head == nullptr;
+        int ret_val = 0; //head == nullptr;
 
-        if(head == tail){
+        if(head == nullptr){
+            ret_val = -1;
+        } else if(head == tail){
             ret_val = head -> get_value();
             delete head;
             head = nullptr;
@@ -96,7 +99,7 @@ public:
 
     void push_back() {
         Node* current = new Node;
-        current -> add_value(static_cast<int>(dist(mt)));
+        current -> add_value((dist(mt)));
         current -> set_next(nullptr);
 
         if(head == nullptr){
@@ -109,9 +112,19 @@ public:
         }
     }
 
-    void print_list() {
-        List* current = head;
+    void print() {
+        Node* current = head;
+        int i = 0;
+        std::cout << "[ ";
+        while(current != nullptr){
+            i++;
+            std::cout << i << ":" << current -> get_value();
+            if (current != tail)
+                std::cout << ", ";
+            current = current -> get_next();
+        }
 
+        std::cout<< " ]" << std::endl;
     }
 
 private:
@@ -121,26 +134,59 @@ private:
 
     std::random_device rd;
     std::mt19937 mt;
-    std::uniform_real_distribution<double> dist;
+    std::uniform_int_distribution<int> dist;
 };
 
 //------------------------------------------------GLOBALS
-// pthread_mutex_t my_mutex;
-// sem_t buff_sem;
+
 
 // //------------------------------------------------PROTO
-// void * producer(void *args);
-// void * consumer_1(void *args);
-// void * consumer_2(void *args);
-// void * consumer_3(void *args);
-// void * show(void *args);
+void producer(List& l){
+    while(1){
+        for(int i = 0; i < 30; i++){
+            l.push_back();
+            std::cout << "PRODUCER: push back" << std::endl;
+
+        }
+        std::this_thread::sleep_for (std::chrono::seconds(5));       
+    }
+}
+
+
+void consumer(List& l, int id){
+    int result;
+    while(1){
+        std::cout << "CONSUMER " << id << ": pop_front() -> ";
+        result = l.pop_front();
+        std::cout << "value: " << result << std::endl;
+
+    }
+}
 
 //------------------------------------------------MAIN
 int main(void){
-    srand(time(NULL));
-        
+    List my_list;        
+    /*int i = 10;
+    while (i > 0){
+        lista.push_back();
+        i--;
+    }
 
-    
+    lista.print();
+    */
+
+    std::vector<std::thread> thread_vector;
+    std::thread p (producer, std::ref(my_list));
+    for(int i = 0; i < 2; i++){
+        thread_vector.push_back(std::thread(consumer, std::ref(my_list), i));
+    }
+
+
+    p.join();
+
+    for(std::thread& th : thread_vector){
+        th.join();
+    }
     return 0;
 }
 
