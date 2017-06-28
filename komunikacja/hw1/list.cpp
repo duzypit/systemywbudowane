@@ -7,6 +7,8 @@
 #include <random>
 #include <chrono>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 /*
 Treść zadania
@@ -37,6 +39,9 @@ typedef struct List{
 6. Jeżeli lista jest pusta, wówczas czytające wątki mają być uśpione.
 
 */
+
+std::mutex mtx;
+std::condition_variable cv;
 
 //------------------------------------------------TYPEDEFS
 
@@ -75,6 +80,7 @@ public:
         
         head = nullptr;
         tail = nullptr;
+        node_quantity = 0;
     }
 
     int pop_front() {
@@ -94,6 +100,7 @@ public:
             delete tmp;
         }
 
+        node_quantity -= 1;
         return(ret_val);
     }
 
@@ -110,6 +117,8 @@ public:
             tmp -> set_next(current);
             tail = current;
         }
+
+        node_quantity += 1;
     }
 
     void print() {
@@ -127,6 +136,14 @@ public:
         std::cout<< " ]" << std::endl;
     }
 
+    bool is_product_redy(){
+        if(node_quantity > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 private:
     Node* head;
     Node* tail;
@@ -141,50 +158,64 @@ private:
 
 
 // //------------------------------------------------PROTO
-void producer(List& l){
-    while(1){
-        for(int i = 0; i < 30; i++){
-            l.push_back();
-            std::cout << "PRODUCER: push back" << std::endl;
+void producer(List& l, int id){
 
+    while(1){
+        {
+            std::lock_guard<std::mutex> lck(mtx);
+            for(int i = 0; i < 6; i++){
+                l.push_back();
+                std::cout << "PRODUCER "<< id << ": push back" << std::endl;
+
+            }
         }
-        std::this_thread::sleep_for (std::chrono::seconds(5));       
+        cv.notify_all();
+        
+        std::this_thread::sleep_for (std::chrono::seconds(id+1));       
+
     }
 }
 
 
-void consumer(List& l, int id){
+void consumer(List& l, int id) {
     int result;
+
     while(1){
+        std::unique_lock<std::mutex> lck(mtx);
+        cv.wait(lck);
+        do{
         std::cout << "CONSUMER " << id << ": pop_front() -> ";
         result = l.pop_front();
         std::cout << "value: " << result << std::endl;
+        } while (result != -1);
 
     }
 }
 
 //------------------------------------------------MAIN
 int main(void){
-    List my_list;        
-    /*int i = 10;
-    while (i > 0){
-        lista.push_back();
-        i--;
-    }
+    //https://stackoverflow.com/questions/2085511/wait-and-notify-in-c-c-shared-memory
+    List my_list;   
 
-    lista.print();
-    */
-
-    std::vector<std::thread> thread_vector;
-    std::thread p (producer, std::ref(my_list));
+    std::vector<std::thread> producers_vector;
+    
     for(int i = 0; i < 2; i++){
-        thread_vector.push_back(std::thread(consumer, std::ref(my_list), i));
+        //std::thread p (producer, std::ref(my_list));
+        producers_vector.push_back(std::thread(producer, std::ref(my_list), i));
+
+    }
+
+    std::vector<std::thread> consumers_vector;
+    for(int i = 0; i < 2; i++){
+        consumers_vector.push_back(std::thread(consumer, std::ref(my_list), i));
     }
 
 
-    p.join();
+    for(std::thread& th : producers_vector){
+        th.join();
+    }
 
-    for(std::thread& th : thread_vector){
+    for(std::thread& th : consumers_vector){
         th.join();
     }
     return 0;
