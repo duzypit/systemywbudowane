@@ -1,2 +1,2 @@
 all:
-	g++ -pthread -std=c++11 list.cpp
+	gcc -Wall -Wextra -pthread list.c
